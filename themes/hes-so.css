@@ -1,0 +1,11 @@
+/* HES-SO ISC theme — magenta accent (August 2025 onwards) */
+:root {
+  --accent: #dc0069;
+  --accent-dim: #dc006920;
+  --accent-dark: #dc0069;
+  --heading-color: #1a1a1a;
+}
+
+.fa-solid-dim {
+    color: #da629c;
+}

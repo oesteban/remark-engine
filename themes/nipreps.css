@@ -1,0 +1,15 @@
+/* NiPreps theme — deep blue accent */
+:root {
+  --accent: #1c487b;
+  --accent-dim: #1c487b20;
+  --accent-dark: #1c487b;
+  --heading-color: #1a1a1a;
+}
+
+.nipreps-blue {
+    color: #1c487b;
+}
+
+.fa-solid-dim {
+    color: #6278da;
+}
