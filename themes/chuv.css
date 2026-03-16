@@ -1,0 +1,7 @@
+/* CHUV theme — green accent (July 2020 – July 2025) */
+:root {
+  --accent: #009933;
+  --accent-dim: #00993320;
+  --accent-dark: #026c00;
+  --heading-color: #738373;
+}
