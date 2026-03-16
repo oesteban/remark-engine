@@ -520,6 +520,9 @@
   var activeStepSlide = null;
   var lastSlideIndex = null;
 
+  // Expose active step slide for nav-controls integration
+  window._stepwiseSvgActive = function () { return activeStepSlide; };
+
   function getStepSlide(index, container) {
     if (!container) {
       return null;

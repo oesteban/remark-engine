@@ -1,0 +1,117 @@
+/* nav-controls.css — floating mouse-clickable navigation overlay */
+
+/* Fixed overlay covering the viewport; pointer-events:none so clicks pass through */
+.nav-controls-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 80;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* Show state toggled by JS */
+.nav-controls-overlay.nav-visible {
+  opacity: 1;
+}
+
+/* All buttons: pointer-events restored, large tap targets */
+.nav-controls-overlay button {
+  pointer-events: auto;
+  position: absolute;
+  border: none;
+  background: rgba(0, 0, 0, 0.25);
+  color: #fff;
+  cursor: pointer;
+  border-radius: 8px;
+  font-family: system-ui, sans-serif;
+  line-height: 1;
+  transition: background 0.15s ease, transform 0.1s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-controls-overlay button:hover {
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.nav-controls-overlay button:active {
+  transform: scale(0.93);
+}
+
+/* --- Primary controls: Prev / Next (vertically centered, left/right edges) --- */
+.nav-btn-prev,
+.nav-btn-next {
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 80px;
+  font-size: 2rem;
+}
+
+.nav-btn-prev { left: 6px; }
+.nav-btn-next { right: 6px; }
+
+.nav-btn-prev:active,
+.nav-btn-next:active {
+  transform: translateY(-50%) scale(0.93);
+}
+
+/* --- Secondary controls: Home / End (top corners, smaller) --- */
+.nav-btn-home,
+.nav-btn-end {
+  top: 6px;
+  width: 40px;
+  height: 40px;
+  font-size: 1.1rem;
+}
+
+.nav-btn-home { left: 6px; }
+.nav-btn-end  { right: 6px; }
+
+/* --- Roulette play/skip/stop buttons (injected into .rr-controls bar) --- */
+.nav-roulette-btn {
+  position: static !important;
+  display: inline-flex !important;
+  width: auto !important;
+  height: auto !important;
+  padding: 0.3rem 0.6rem !important;
+  font-size: 1.1rem !important;
+  background: rgba(0, 0, 0, 0.15) !important;
+  color: #333 !important;
+  border-radius: 6px !important;
+  margin-left: 4px;
+}
+
+.nav-roulette-btn:hover {
+  background: rgba(0, 0, 0, 0.28) !important;
+}
+
+/* --- Responsive: larger buttons on narrow/touch screens --- */
+@media (max-width: 1000px), (pointer: coarse) {
+  .nav-btn-prev,
+  .nav-btn-next {
+    width: 56px;
+    height: 96px;
+    font-size: 2.4rem;
+  }
+
+  .nav-btn-home,
+  .nav-btn-end {
+    width: 48px;
+    height: 48px;
+    font-size: 1.3rem;
+  }
+}
+
+/* --- Hide on print --- */
+@media print {
+  .nav-controls-overlay { display: none !important; }
+}
