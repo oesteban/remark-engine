@@ -1,4 +1,4 @@
-// nav-controls.js — floating mouse-clickable navigation for remark.js
+// nav-controls.js — bottom navigation bar for remark.js
 (function () {
   'use strict';
 
@@ -7,39 +7,65 @@
     return;
   }
 
-  // ---------- Build the overlay ----------
-  var overlay = document.createElement('div');
-  overlay.className = 'nav-controls-overlay';
+  // ---------- Build the bottom bar ----------
+  var hoverZone = document.createElement('div');
+  hoverZone.className = 'nav-controls-hover-zone';
 
-  var btnPrev = document.createElement('button');
-  btnPrev.className = 'nav-btn-prev';
-  btnPrev.setAttribute('aria-label', 'Previous slide');
-  btnPrev.setAttribute('title', 'Previous');
-  btnPrev.textContent = '\u2039'; // ‹
-
-  var btnNext = document.createElement('button');
-  btnNext.className = 'nav-btn-next';
-  btnNext.setAttribute('aria-label', 'Next slide');
-  btnNext.setAttribute('title', 'Next');
-  btnNext.textContent = '\u203A'; // ›
+  var bar = document.createElement('div');
+  bar.className = 'nav-controls-bar';
 
   var btnHome = document.createElement('button');
-  btnHome.className = 'nav-btn-home';
+  btnHome.className = 'nav-btn';
   btnHome.setAttribute('aria-label', 'First slide');
   btnHome.setAttribute('title', 'First slide');
   btnHome.textContent = '\u23EE'; // ⏮
 
+  var btnPrev = document.createElement('button');
+  btnPrev.className = 'nav-btn nav-btn-prev';
+  btnPrev.setAttribute('aria-label', 'Previous slide');
+  btnPrev.setAttribute('title', 'Previous');
+  btnPrev.textContent = '\u2039'; // ‹
+
+  var slideInput = document.createElement('input');
+  slideInput.className = 'nav-slide-input';
+  slideInput.type = 'number';
+  slideInput.min = '1';
+  slideInput.setAttribute('aria-label', 'Slide number');
+  slideInput.setAttribute('title', 'Type slide number + Enter');
+
+  var slideCount = document.createElement('span');
+  slideCount.className = 'nav-slide-count';
+
+  var btnNext = document.createElement('button');
+  btnNext.className = 'nav-btn nav-btn-next';
+  btnNext.setAttribute('aria-label', 'Next slide');
+  btnNext.setAttribute('title', 'Next');
+  btnNext.textContent = '\u203A'; // ›
+
   var btnEnd = document.createElement('button');
-  btnEnd.className = 'nav-btn-end';
+  btnEnd.className = 'nav-btn';
   btnEnd.setAttribute('aria-label', 'Last slide');
   btnEnd.setAttribute('title', 'Last slide');
   btnEnd.textContent = '\u23ED'; // ⏭
 
-  overlay.appendChild(btnPrev);
-  overlay.appendChild(btnNext);
-  overlay.appendChild(btnHome);
-  overlay.appendChild(btnEnd);
-  document.body.appendChild(overlay);
+  bar.appendChild(btnHome);
+  bar.appendChild(btnPrev);
+  bar.appendChild(slideInput);
+  bar.appendChild(slideCount);
+  bar.appendChild(btnNext);
+  bar.appendChild(btnEnd);
+
+  document.body.appendChild(hoverZone);
+  document.body.appendChild(bar);
+
+  // ---------- Block remark.js from seeing events on the bar ----------
+  // remark.js listens for mousedown/click on the document to advance slides.
+  // We must stop propagation at the bar level for ALL event types remark uses.
+  ['mousedown', 'mouseup', 'click', 'touchstart', 'touchend'].forEach(function (evt) {
+    bar.addEventListener(evt, function (e) {
+      e.stopPropagation();
+    }, false);
+  });
 
   // ---------- Stepwise-SVG integration ----------
   function getActiveStepSlide() {
@@ -49,10 +75,34 @@
     return null;
   }
 
+  // ---------- Slide number from URL hash (source of truth) ----------
+  // remark.js updates location.hash via replaceState (no hashchange event),
+  // so we read the hash directly whenever afterShowSlide fires.
+  function slideNoFromHash() {
+    var h = window.location.hash.replace(/^#/, '');
+    var n = parseInt(h, 10);
+    return (n >= 1) ? n : 1;
+  }
+
+  function totalSlides() {
+    return slideshow.getSlideCount();
+  }
+
+  function syncInput() {
+    if (document.activeElement === slideInput) return;
+    slideInput.value = slideNoFromHash();
+    slideInput.max = totalSlides();
+    slideCount.textContent = '/ ' + totalSlides();
+  }
+
+  // Defer to next tick so remark finishes its replaceState before we read the hash
+  slideshow.on('afterShowSlide', function () { setTimeout(syncInput, 0); });
+  window.addEventListener('hashchange', syncInput);
+  syncInput();
+
   // ---------- Navigation handlers ----------
   btnNext.addEventListener('click', function (e) {
     e.preventDefault();
-    e.stopPropagation();
     var step = getActiveStepSlide();
     if (step && step.stepForward()) {
       return;
@@ -62,7 +112,6 @@
 
   btnPrev.addEventListener('click', function (e) {
     e.preventDefault();
-    e.stopPropagation();
     var step = getActiveStepSlide();
     if (step && step.stepBackward()) {
       return;
@@ -72,45 +121,65 @@
 
   btnHome.addEventListener('click', function (e) {
     e.preventDefault();
-    e.stopPropagation();
     slideshow.gotoFirstSlide();
   });
 
   btnEnd.addEventListener('click', function (e) {
     e.preventDefault();
-    e.stopPropagation();
     slideshow.gotoLastSlide();
   });
 
-  // ---------- Auto-hide after 3 seconds of mouse inactivity ----------
-  var hideTimer = null;
-  var HIDE_DELAY = 3000;
+  // ---------- Slide number input ----------
+  slideInput.addEventListener('keydown', function (e) {
+    e.stopPropagation(); // prevent remark from handling arrow keys etc.
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      var num = parseInt(slideInput.value, 10);
+      var total = totalSlides();
+      if (num >= 1 && num <= total) {
+        window.location.hash = '#' + num;
+      }
+      slideInput.blur();
+    } else if (e.key === 'Escape') {
+      syncInput();
+      slideInput.blur();
+    }
+  });
 
-  function showControls() {
-    overlay.classList.add('nav-visible');
+  slideInput.addEventListener('keyup', function (e) { e.stopPropagation(); });
+  slideInput.addEventListener('keypress', function (e) { e.stopPropagation(); });
+  slideInput.addEventListener('blur', function () { syncInput(); });
+
+  // ---------- Show/hide on hover over bottom edge ----------
+  var hideTimer = null;
+  var HIDE_DELAY = 600;
+
+  function showBar() {
+    bar.classList.add('nav-visible');
+    clearTimeout(hideTimer);
+  }
+
+  function scheduleHide() {
     clearTimeout(hideTimer);
     hideTimer = setTimeout(function () {
-      overlay.classList.remove('nav-visible');
+      // Don't hide if input is focused
+      if (document.activeElement === slideInput) return;
+      bar.classList.remove('nav-visible');
     }, HIDE_DELAY);
   }
 
-  document.addEventListener('mousemove', showControls);
-  // Also show on any mouse button press (e.g., touchpad click without move)
-  document.addEventListener('mousedown', showControls);
-
-  // Show initially for a moment so the presenter knows controls exist
-  showControls();
+  hoverZone.addEventListener('mouseenter', showBar);
+  hoverZone.addEventListener('mouseleave', scheduleHide);
+  bar.addEventListener('mouseenter', showBar);
+  bar.addEventListener('mouseleave', scheduleHide);
 
   // ---------- Roulette integration ----------
-  // On roulette slides, inject play/skip/stop buttons into the .rr-controls bar.
   var rouletteButtonsAdded = false;
 
   function addRouletteButtons(root) {
     if (!window.Roulette) return;
     var controls = root.querySelector('.rr-controls');
     if (!controls) return;
-
-    // Avoid duplicates
     if (controls.querySelector('.nav-roulette-btn')) return;
 
     var sep = document.createElement('span');
@@ -162,7 +231,6 @@
 
   function removeRouletteButtons() {
     if (!rouletteButtonsAdded) return;
-    // Clean up is handled automatically when roulette teardown re-renders controls
     rouletteButtonsAdded = false;
   }
 
@@ -174,7 +242,6 @@
     if (!content) return;
 
     if (content.classList.contains('roulette') && window.Roulette) {
-      // Small delay to let roulette.js mount its controls first
       setTimeout(function () { addRouletteButtons(content); }, 0);
     } else {
       removeRouletteButtons();
