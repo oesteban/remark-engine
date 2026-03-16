@@ -1,92 +1,122 @@
-/* nav-controls.css — floating mouse-clickable navigation overlay */
+/* nav-controls.css — bottom navigation bar for remark.js */
 
-/* Fixed overlay covering the viewport; pointer-events:none so clicks pass through */
-.nav-controls-overlay {
+/* Invisible hover zone at the bottom edge of the viewport */
+.nav-controls-hover-zone {
   position: fixed;
-  top: 0;
+  bottom: 0;
   left: 0;
   width: 100%;
-  height: 100%;
+  height: 32px;
+  z-index: 79;
+}
+
+/* Bottom navigation bar */
+.nav-controls-bar {
+  position: fixed;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%) translateY(calc(100% + 18px));
   z-index: 80;
-  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: rgba(30, 30, 30, 0.65);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 3px 6px;
+  border-radius: 6px;
+  transition: transform 0.2s ease, opacity 0.2s ease;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  pointer-events: none;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
 }
 
-/* Show state toggled by JS */
-.nav-controls-overlay.nav-visible {
+.nav-controls-bar.nav-visible {
+  transform: translateX(-50%) translateY(0);
   opacity: 1;
+  pointer-events: auto;
 }
 
-/* All buttons: pointer-events restored, large tap targets */
-.nav-controls-overlay button {
-  pointer-events: auto;
-  position: absolute;
+/* All buttons in the bar */
+.nav-controls-bar .nav-btn {
   border: none;
-  background: rgba(0, 0, 0, 0.25);
-  color: #fff;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.85);
   cursor: pointer;
-  border-radius: 8px;
   font-family: system-ui, sans-serif;
   line-height: 1;
-  transition: background 0.15s ease, transform 0.1s ease;
-  user-select: none;
-  -webkit-user-select: none;
-  padding: 0;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 1.15rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: background 0.12s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  min-width: 32px;
+  min-height: 28px;
 }
 
-.nav-controls-overlay button:hover {
-  background: rgba(0, 0, 0, 0.45);
+.nav-controls-bar .nav-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
 }
 
-.nav-controls-overlay button:active {
-  transform: scale(0.93);
+.nav-controls-bar .nav-btn:active {
+  background: rgba(255, 255, 255, 0.25);
 }
 
-/* --- Primary controls: Prev / Next (vertically centered, left/right edges) --- */
-.nav-btn-prev,
-.nav-btn-next {
-  top: 50%;
-  transform: translateY(-50%);
-  width: 48px;
-  height: 80px;
-  font-size: 2rem;
+/* Prev/Next are slightly larger */
+.nav-controls-bar .nav-btn-prev,
+.nav-controls-bar .nav-btn-next {
+  font-size: 1.4rem;
+  padding: 4px 6px;
 }
 
-.nav-btn-prev { left: 6px; }
-.nav-btn-next { right: 6px; }
-
-.nav-btn-prev:active,
-.nav-btn-next:active {
-  transform: translateY(-50%) scale(0.93);
+/* Slide number input */
+.nav-slide-input {
+  width: 3.2em;
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 3px 2px;
+  border-radius: 3px;
+  outline: none;
+  -moz-appearance: textfield;
 }
 
-/* --- Secondary controls: Home / End (top corners, smaller) --- */
-.nav-btn-home,
-.nav-btn-end {
-  top: 6px;
-  width: 40px;
-  height: 40px;
-  font-size: 1.1rem;
+.nav-slide-input::-webkit-inner-spin-button,
+.nav-slide-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
-.nav-btn-home { left: 6px; }
-.nav-btn-end  { right: 6px; }
+.nav-slide-input:focus {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Slide count label */
+.nav-slide-count {
+  color: rgba(255, 255, 255, 0.5);
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.85rem;
+  padding-right: 2px;
+  white-space: nowrap;
+}
 
 /* --- Roulette play/skip/stop buttons (injected into .rr-controls bar) --- */
 .nav-roulette-btn {
-  position: static !important;
   display: inline-flex !important;
-  width: auto !important;
-  height: auto !important;
+  border: none;
   padding: 0.3rem 0.6rem !important;
   font-size: 1.1rem !important;
   background: rgba(0, 0, 0, 0.15) !important;
   color: #333 !important;
   border-radius: 6px !important;
+  cursor: pointer;
   margin-left: 4px;
 }
 
@@ -94,24 +124,36 @@
   background: rgba(0, 0, 0, 0.28) !important;
 }
 
-/* --- Responsive: larger buttons on narrow/touch screens --- */
-@media (max-width: 1000px), (pointer: coarse) {
-  .nav-btn-prev,
-  .nav-btn-next {
-    width: 56px;
-    height: 96px;
-    font-size: 2.4rem;
+/* --- Responsive: larger targets on touch screens --- */
+@media (pointer: coarse) {
+  .nav-controls-hover-zone {
+    height: 48px;
   }
 
-  .nav-btn-home,
-  .nav-btn-end {
-    width: 48px;
-    height: 48px;
+  .nav-controls-bar .nav-btn {
+    min-width: 44px;
+    min-height: 36px;
     font-size: 1.3rem;
+  }
+
+  .nav-controls-bar .nav-btn-prev,
+  .nav-controls-bar .nav-btn-next {
+    font-size: 1.6rem;
+  }
+
+  .nav-slide-input {
+    font-size: 1rem;
+    width: 3.5em;
+    padding: 5px 4px;
+  }
+
+  .nav-slide-count {
+    font-size: 1rem;
   }
 }
 
 /* --- Hide on print --- */
 @media print {
-  .nav-controls-overlay { display: none !important; }
+  .nav-controls-bar,
+  .nav-controls-hover-zone { display: none !important; }
 }
