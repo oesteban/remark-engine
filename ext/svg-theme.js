@@ -15,35 +15,49 @@
     return;
   }
 
-  // Build the CSS block that will be injected into each SVG document
-  var css =
-    '.accent-stroke { stroke: ' + accent + ' !important; }\n' +
-    '.accent-fill { fill: ' + accent + ' !important; }\n' +
-    '.accent-dim-stroke { stroke: ' + accentDim + ' !important; }\n' +
-    '.accent-dim-fill { fill: ' + accentDim + ' !important; }\n' +
-    '.accent-dark-stroke { stroke: ' + accentDark + ' !important; }\n' +
-    '.accent-dark-fill { fill: ' + accentDark + ' !important; }\n';
+  // Grid diagram color channels, keyed by accent colour.
+  // Channel A = green in CHUV source SVGs, Channel B = blue.
+  // Themes that need the swap (e.g. nipreps) reverse A↔B.
+  var GRID_DEFAULT = { a: '#6ed567', aL: '#afde85', b: '#55a9e2', bL: '#9ac7df' };
+  var GRID_SWAPPED = { a: '#55a9e2', aL: '#9ac7df', b: '#6ed567', bL: '#afde85' };
+  var gridMap = {
+    '#009933': GRID_DEFAULT,  // CHUV (matches source SVG)
+    '#dc0069': { a: '#dc0069', aL: '#de84af', b: '#55a9e2', bL: '#9ac7df' }  // hes-so
+  };
+  var grid = gridMap[accent] || GRID_SWAPPED;
 
-  var STYLE_ID = 'remark-theme';
+  // Class → [CSS property, value] mapping
+  var rules = [
+    ['accent-stroke', 'stroke', accent],
+    ['accent-fill', 'fill', accent],
+    ['accent-dim-stroke', 'stroke', accentDim],
+    ['accent-dim-fill', 'fill', accentDim],
+    ['accent-dark-stroke', 'stroke', accentDark],
+    ['accent-dark-fill', 'fill', accentDark],
+    ['accent-a-fill', 'fill', grid.a],
+    ['accent-a-light-fill', 'fill', grid.aL],
+    ['accent-b-fill', 'fill', grid.b],
+    ['accent-b-light-fill', 'fill', grid.bL]
+  ];
 
-  function injectStyle(svgDoc) {
+  var MARKER = 'data-remark-themed';
+
+  function applyTheme(svgDoc) {
     if (!svgDoc || !svgDoc.documentElement) {
       return;
     }
-    // Avoid double-injection
-    if (svgDoc.getElementById(STYLE_ID)) {
+    // Avoid double-application
+    if (svgDoc.documentElement.hasAttribute(MARKER)) {
       return;
     }
-    var styleEl = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'style');
-    styleEl.setAttribute('id', STYLE_ID);
-    styleEl.setAttribute('type', 'text/css');
-    styleEl.textContent = css;
-    // Prepend into <defs> if available, otherwise into the root <svg>
-    var defs = svgDoc.querySelector('defs');
-    if (defs) {
-      defs.insertBefore(styleEl, defs.firstChild);
-    } else {
-      svgDoc.documentElement.insertBefore(styleEl, svgDoc.documentElement.firstChild);
+    svgDoc.documentElement.setAttribute(MARKER, '1');
+    for (var i = 0; i < rules.length; i++) {
+      var cls = rules[i][0], prop = rules[i][1], val = rules[i][2];
+      if (!val) { continue; }
+      var els = svgDoc.querySelectorAll('.' + cls);
+      for (var j = 0; j < els.length; j++) {
+        els[j].style.setProperty(prop, val, 'important');
+      }
     }
   }
 
@@ -54,7 +68,7 @@
     // Always listen for load — covers initial load and potential re-navigation
     obj.addEventListener('load', function () {
       try {
-        injectStyle(obj.contentDocument);
+        applyTheme(obj.contentDocument);
       } catch (e) {
         // cross-origin — ignore
       }
@@ -64,7 +78,7 @@
       var doc = obj.contentDocument;
       if (doc && doc.documentElement &&
           doc.documentElement.tagName.toLowerCase() === 'svg') {
-        injectStyle(doc);
+        applyTheme(doc);
       }
     } catch (e) {
       // cross-origin — ignore
