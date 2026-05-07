@@ -48,12 +48,19 @@
   btnEnd.setAttribute('title', 'Last slide');
   btnEnd.textContent = '\u23ED'; // ⏭
 
+  var btnFs = document.createElement('button');
+  btnFs.className = 'nav-btn nav-btn-fs';
+  btnFs.setAttribute('aria-label', 'Toggle fullscreen');
+  btnFs.setAttribute('title', 'Fullscreen (F)');
+  btnFs.textContent = '⛶';
+
   bar.appendChild(btnHome);
   bar.appendChild(btnPrev);
   bar.appendChild(slideInput);
   bar.appendChild(slideCount);
   bar.appendChild(btnNext);
   bar.appendChild(btnEnd);
+  bar.appendChild(btnFs);
 
   document.body.appendChild(hoverZone);
   document.body.appendChild(bar);
@@ -129,6 +136,39 @@
     slideshow.gotoLastSlide();
   });
 
+  // ---------- Fullscreen ----------
+  function isFullscreen() {
+    return !!(document.fullscreenElement || document.webkitFullscreenElement);
+  }
+
+  function toggleFullscreen() {
+    var doc = document, root = doc.documentElement;
+    if (isFullscreen()) {
+      var exit = doc.exitFullscreen || doc.webkitExitFullscreen;
+      if (exit) exit.call(doc);
+    } else {
+      var enter = root.requestFullscreen || root.webkitRequestFullscreen;
+      if (enter) enter.call(root);
+    }
+  }
+
+  function syncFsIcon() {
+    if (isFullscreen()) {
+      btnFs.textContent = '⤢'; // ⤢ (compress)
+      btnFs.setAttribute('aria-label', 'Exit fullscreen');
+    } else {
+      btnFs.textContent = '⛶'; // ⛶ (expand)
+      btnFs.setAttribute('aria-label', 'Toggle fullscreen');
+    }
+  }
+
+  btnFs.addEventListener('click', function (e) {
+    e.preventDefault();
+    toggleFullscreen();
+  });
+  document.addEventListener('fullscreenchange', syncFsIcon);
+  document.addEventListener('webkitfullscreenchange', syncFsIcon);
+
   // ---------- Slide number input ----------
   slideInput.addEventListener('keydown', function (e) {
     e.stopPropagation(); // prevent remark from handling arrow keys etc.
@@ -138,8 +178,14 @@
       var total = totalSlides();
       if (num >= 1 && num <= total) {
         window.location.hash = '#' + num;
+        slideInput.blur();
+      } else {
+        slideInput.classList.add('nav-slide-input--error');
+        setTimeout(function () {
+          slideInput.classList.remove('nav-slide-input--error');
+          syncInput();
+        }, 350);
       }
-      slideInput.blur();
     } else if (e.key === 'Escape') {
       syncInput();
       slideInput.blur();
@@ -174,8 +220,6 @@
   bar.addEventListener('mouseleave', scheduleHide);
 
   // ---------- Roulette integration ----------
-  var rouletteButtonsAdded = false;
-
   function addRouletteButtons(root) {
     if (!window.Roulette) return;
     var controls = root.querySelector('.rr-controls');
@@ -226,12 +270,6 @@
     controls.appendChild(btnPlay);
     controls.appendChild(btnSkip);
     controls.appendChild(btnStop);
-    rouletteButtonsAdded = true;
-  }
-
-  function removeRouletteButtons() {
-    if (!rouletteButtonsAdded) return;
-    rouletteButtonsAdded = false;
   }
 
   slideshow.on('afterShowSlide', function () {
@@ -243,8 +281,6 @@
 
     if (content.classList.contains('roulette') && window.Roulette) {
       setTimeout(function () { addRouletteButtons(content); }, 0);
-    } else {
-      removeRouletteButtons();
     }
   });
 })();
