@@ -66,6 +66,12 @@
   background: rgba(255, 255, 255, 0.25);
 }
 
+.nav-controls-bar .nav-btn:focus { outline: none; }
+.nav-controls-bar .nav-btn:focus-visible {
+  outline: 2px solid var(--accent, #ffffff);
+  outline-offset: 1px;
+}
+
 /* Prev/Next are slightly larger */
 .nav-controls-bar .nav-btn-prev,
 .nav-controls-bar .nav-btn-next {
@@ -96,6 +102,22 @@
 
 .nav-slide-input:focus {
   background: rgba(255, 255, 255, 0.25);
+}
+
+.nav-slide-input:focus-visible {
+  outline: 2px solid var(--accent, #ffffff);
+  outline-offset: 1px;
+}
+
+.nav-slide-input.nav-slide-input--error {
+  background: rgba(220, 53, 69, 0.85);
+  animation: nav-slide-input-shake 0.25s ease-in-out;
+}
+
+@keyframes nav-slide-input-shake {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-3px); }
+  75%      { transform: translateX(3px); }
 }
 
 /* Slide count label */
