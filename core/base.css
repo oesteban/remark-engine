@@ -52,6 +52,13 @@ h3 {
     transform: translateY(-50%);
 }
 
+.left {
+    width: 80%;
+    text-align: left;
+    margin-left: 10%;
+
+}
+
 .middle {
     margin: 0;
     position: absolute;
