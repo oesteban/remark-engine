@@ -634,6 +634,7 @@ blockquote p {
 }
 
 .remark-slide-content.cover .remark-slide-number { display: none !important; }
+.remark-slide-content.no-counter .remark-slide-number { display: none !important; }
 
 .clear { clear: both; }
 .border { border: 1px solid red; }
