@@ -19,6 +19,36 @@
   --logo-aspect: 3 / 1;
 }
 
+@page {
+  size: 1210px 681px;
+  margin: 0;
+}
+
+@media print {
+  .remark-slide-scaler {
+    width: 100% !important;
+    height: 100% !important;
+    transform: scale(1) !important;
+    top: 0 !important;
+    left: 0 !important;
+  }
+}
+
+.table-compact .compare { width:100%; border-collapse: collapse; font-size: 0.9em; }
+.table-compact .compare th, .table-compact .compare td { padding: .45rem .6rem; border-bottom: 1px solid #e6e6e6; vertical-align: top; }
+.table-compact .compare th { text-align: left; white-space: nowrap; }
+.legend { margin-top: .5rem; font-size: .85em; color: #666; }
+
+figcaption {
+    text-align: left;
+}
+.frameContainer {
+  overflow-x: hidden;
+  overflow-y: scroll;
+  height: 540px;
+  width: 100%;
+}
+
 .blur {
     -webkit-filter: blur(5px) opacity(.3);
     -moz-filter: blur(10px) opacity(.3);
