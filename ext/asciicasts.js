@@ -14,11 +14,18 @@ if (allcasts.has(slideNumber)) {
     return;
 }
 
-var castid = element[0].attributes["id"].value;
+var castEl = element[0];
+var castid = castEl.attributes["id"].value;
+// Per-cast playback speed via `data-speed` on the .asciicast div; default 4.
+var speed = parseFloat(castEl.dataset.speed) || 1;
+// `data-auto` defaults to true; only the explicit string "false" disables it.
+var auto = castEl.dataset.auto !== "false";
+var rows = parseInt(castEl.dataset.rows) || 20;
+var cols = parseInt(castEl.dataset.cols) || 100;
 allcasts.set(slideNumber, AsciinemaPlayer.create(
     `images/${castid}.cast`,
     document.getElementById(castid),
-    { autoPlay: true, speed: 1, idle_time_limit: 8, rows: 24, cols: 100 }
+    { autoPlay: auto, speed: speed, idle_time_limit: 8, rows: rows, cols: cols }
 ));
 
 });
