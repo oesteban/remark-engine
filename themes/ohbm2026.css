@@ -1,0 +1,51 @@
+/* NiPreps theme — deep blue accent */
+:root {
+    /* --logo-url: url("../assets/logo_nipreps.png"); */
+  --accent: #2e3192;
+  --accent-dim: #1c487b20;
+  --accent-dark: #252774;
+  --heading-color: #1a1a1a;
+}
+
+.nipreps-blue {
+    color: #1c487b;
+}
+
+.fa-solid-dim {
+    color: #6278da;
+}
+
+.title-slide { background-color: #2e3192; color: white; --heading-color: white; --accent: white; }
+
+.black { background-color: black; margin: 0 5%; width: 90%; }
+.black img {
+  max-width: 100%;
+}
+.footer {
+  position: absolute;
+  bottom: 5px;
+  left: 2em;
+  right: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.footer-logo-row {
+  flex-shrink: 0;          /* logo never squishes */
+  display: flex;
+  align-items: center;
+  padding-right: 8px;
+}
+
+.footer-logo-row p {
+  margin: 0;
+}
+
+.footer-bar {
+  flex: 1;                 /* takes all remaining width */
+  height: 19px;            /* total height of both bars + gap */
+  background:
+    linear-gradient(to left, transparent, #9e005d) 0 0    / 90% 5px no-repeat,
+    linear-gradient(to left, transparent, #2e3192) 0 10px / 90% 5px no-repeat;
+}
