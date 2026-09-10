@@ -7,6 +7,9 @@
   /* --- Theme tokens (override in theme files) --- */
   --accent: #009933;
   --accent-dim: #00993320;
+  /* A light wash of the accent, for identity marks that label rather than
+     call for attention. Derived, so a theme only ever sets --accent. */
+  --accent-tint: color-mix(in srgb, var(--accent) 38%, #fff);
   --accent-dark: var(--accent);
   --heading-color: #738373;
 
@@ -486,12 +489,263 @@ a {
     height: 15%;
 }
 
+/* Footer strip pinned to the bottom of a slide, left-aligned with
+   .boxed-content and clearing the .perma-sidebar.
+
+   Additive alternative to .bottom-box, which predates box-sizing: its
+   width:89% excludes 55px + 4% of padding, so at 16:9 it runs ~11px past the
+   right edge of the slide. .bottom-box is left exactly as it is, because the
+   engine is shared with the chuv / nipreps / ohbm decks. */
+.slide-footer {
+    position: absolute;
+    bottom: 0.7em;
+    left: 40px;
+    width: 89%;
+    padding-left: 55px;
+    padding-right: 4%;
+    box-sizing: border-box;
+}
+
 .distribute {
     display: flex;
     justify-content: space-between;
     flex-direction: column;
     height: 80%;
     width: 100%;
+}
+
+/* ---------------------------------------------------------------------------
+   Card decks: .cards + .card
+
+   A row or grid of equal-weight boxes, for "four facts" / "four numbers" slides.
+   Deliberately mirrors the visual vocabulary of .gr-group in ext/roulette.css
+   (10px radius, hairline border, soft shadow) so cards authored in Markdown and
+   groups drawn by the roulette read as one system.
+
+     .cards.cols-4[
+     .card[
+     ### Heading
+     body text
+     ]
+     .card[ ... ]
+     ]
+
+   remark emits a <div> for a content class whose bracketed body contains a
+   newline, so the nesting above is valid block markup. Keep each .card[ on its
+   own line or you will get a <span> and the grid will not apply.
+
+   Arrangement, on .cards:
+     (default)          auto-fit, min 220px, wraps as needed
+     .cols-1 ... .cols-5 fixed column count
+     .rows-2            two rows, columns derived from the card count
+     .tight             half gap
+     .fill              stretch to most of the slide height
+   Emphasis, on .card:
+     .muted             greyed out (a section that is not this one)
+     .accent            filled with the dim accent
+   Spans inside a card:
+     .kicker            uppercase eyebrow
+     .metric            the big number
+     .metric-unit       smaller suffix on the big number
+     .foot              sinks to the bottom of the card
+   --------------------------------------------------------------------------- */
+.cards {
+    /* box model deliberately identical to .boxed-content, so a .cards block
+       clears the floated .perma-sidebar the same way every other slide does */
+    float: left;
+    width: 89%;
+    padding-right: 4%;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    align-items: stretch;
+    margin-top: 0.7em;
+}
+
+.cards.cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+.cards.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.cards.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.cards.cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.cards.cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+
+.cards.rows-2 {
+    grid-template-columns: none;
+    grid-template-rows: 1fr 1fr;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+}
+
+.cards.tight { gap: 10px; }
+
+/* Cards in a row are always equal height: `align-items: stretch` sizes every
+   card to the tallest one's content, so .foot lands on a shared baseline
+   without anyone declaring a height. Two ways to place that row:
+
+   .fill      force the row to most of the slide, whatever the content.
+              Dashboard look; cards will have empty lower halves if the
+              content is short.
+   .vcenter   let the row take exactly the height its tallest card needs,
+              and centre it in the slide. Usually what you want. */
+.cards.fill { min-height: 60%; }
+
+.cards.vcenter {
+    float: none;
+    position: absolute;
+    top: 53%;
+    transform: translateY(-50%);
+    /* span the slide explicitly rather than inherit the float's width, so the
+       row lines up with the h1 on the left and the slide edge on the right.
+       left clears the .perma-sidebar. */
+    left: 88px;
+    right: 55px;
+    width: auto;
+    padding-right: 0;
+    box-sizing: border-box;
+    margin-top: 0;
+}
+
+.cards .card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-top: 4px solid var(--accent);
+    border-radius: 10px;
+    /* named so the corner icon can sit on the content box rather than on the
+       padding box, which is where top/right:0 would put it */
+    --card-pad-y: 0.7em;
+    --card-pad-x: 0.85em;
+    padding: var(--card-pad-y) var(--card-pad-x) 0.8em;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    line-height: 1.35;
+}
+
+.cards .card > :first-child { margin-top: 0; }
+.cards .card > :last-child { margin-bottom: 0; }
+
+.cards .card h3 {
+    font-size: 1.2em;
+    color: var(--accent);
+    margin: 0 0 0.35em 0;
+}
+
+.cards .card p { margin: 0.3em 0; }
+.cards .card ul { margin: 0.3em 0; padding-left: 1.1em; }
+.cards .card li { margin: 0.18em 0; }
+
+.cards .card .kicker {
+    display: block;
+    font-size: 0.6em;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #999;
+    margin-bottom: 0.15em;
+}
+
+.cards .card .foot {
+    display: block;
+    padding-top: 0.5em;
+    font-size: 0.85em;
+    color: #888;
+}
+
+/* Markdown wraps a trailing .foot[] in its own <p>, so the flex item is the
+   paragraph, not the span: the auto margin has to go on the paragraph or the
+   footer will not sink. */
+.cards .card > *:has(> .foot) { margin-top: auto; }
+
+.cards .card .metric {
+    display: block;
+    text-align: center;
+    font-size: 4.2em;
+    font-weight: 800;
+    line-height: 0.95;
+    color: var(--accent);
+}
+
+.cards .card .metric-unit {
+    font-size: 0.4em;
+    font-weight: 600;
+}
+
+.cards .card.muted { border-top-color: #ccc; }
+.cards .card.muted h3,
+.cards .card.muted .metric { color: #999; }
+
+.cards .card.accent { background: var(--accent-dim); }
+
+/* Section identity icon. One icon per course section, reused wherever that
+   section is named, so the four sections stay recognisable from deck to deck.
+   Tinted rather than full accent: it labels, it does not call for attention.
+   The nested <i> needs `inherit` because base.css colours .fa-solid directly. */
+.section-icon {
+    display: block;
+    font-size: 2.4em;
+    line-height: 1;
+    margin-bottom: 0.3em;
+    color: var(--accent-tint);
+}
+
+.section-icon .fa-solid,
+.section-icon .fa-regular,
+.section-icon .fa-brands { color: inherit; }
+
+/* On a .accent card the tint sits on a wash of the same hue and goes muddy;
+   take it a step darker so it still reads. */
+.cards .card.accent .section-icon {
+    color: color-mix(in srgb, var(--accent) 55%, #fff);
+}
+
+.cards .card.accent .section-icon.corner {
+    color: color-mix(in srgb, var(--accent) 25%, #fff);
+}
+
+/* Same icon, pushed to the top-right so the card's own content leads (a big
+   .metric, say).
+
+   Out of flow, so the kicker keeps exactly the top-left position it would have
+   if there were no icon at all. What must not slide underneath is the heading,
+   and the heading follows the kicker, so the clearance is bought by giving the
+   kicker's own line the icon's height as a floor. The icon's height and that
+   floor both come from --corner-icon and both resolve against the card's font
+   size, so they track each other instead of drifting apart.
+
+   Markdown wraps the icon in its own <p>; that <p> is the flex item, so the
+   positioning goes on the wrapper, not on the span. */
+.cards .card {
+    --corner-icon: 2.4em;
+}
+
+.cards .card > *:has(> .section-icon.corner) {
+    position: absolute;
+    top: var(--card-pad-y);
+    right: var(--card-pad-x);
+    margin: 0;
+}
+
+/* Whatever follows the icon (the kicker, in practice) reserves its height. */
+.cards .card > *:has(> .section-icon.corner) + * {
+    min-height: var(--corner-icon);
+}
+
+.section-icon.corner {
+    margin: 0;
+}
+
+.section-icon.centered {
+    text-align: center;
+    margin: 10px auto;
+    font-size: 5.0em;
+}
+
+/* Hard-stop card: the one column on a slide that means "do not continue". */
+.cards .card.alert { border-top-color: #d40000; }
+.cards .card.alert h3 { color: #d40000; }
+
+/* Shadows cost toner and add nothing on paper. */
+@media print {
+    .cards .card { box-shadow: none; }
 }
 
 .cut-right {
@@ -556,6 +810,39 @@ figcaption {
     color: #999;
     padding-right: 20px;
 }
+
+/* A plain readable table for authored Markdown. Unlike .program-table (a
+   two-column time/content schedule, whose header is deliberately hidden) this
+   makes no assumption about what the columns mean and keeps the header row. */
+.data-table table {
+    border-collapse: collapse;
+    margin: 0.6em 0;
+}
+
+.data-table th {
+    color: var(--accent);
+    font-weight: 800;
+    text-align: center;
+    padding: 0.35em 0.9em;
+    border-bottom: 2px solid var(--accent);
+}
+
+.data-table td {
+    text-align: center;
+    padding: 0.35em 0.9em;
+    border-bottom: 1px solid #e6e6e6;
+}
+
+.data-table th:first-child,
+.data-table td:first-child {
+    text-align: left;
+    white-space: nowrap;
+}
+
+.data-table tr:last-child td { border-bottom: none; }
+
+/* text-align:center centres inline content, not a block-level <table>. */
+.data-table.center table { margin-left: auto; margin-right: auto; }
 
 .people-table td:nth-child(1) {
     padding-right: 20px;
