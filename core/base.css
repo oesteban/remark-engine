@@ -270,15 +270,44 @@ a {
     color: var(--accent);
 }
 
+/* The running rail is chrome, not content.
+
+   It used to be a `float: left` inside the content flow, which made every
+   layout mode work around it: a float is ignored on a flex item, its painted
+   height depended on the content box, and any slide whose content did not
+   fill the slide left the rail (and the white behind it) stopping short.
+
+   Pinned to the slide box instead, it is full height by construction, whatever
+   the content does, and no layout mode has to know it exists. The gutter it
+   used to reserve with `margin-right` is given back as padding on the slide,
+   applied only where a rail is actually present. */
 .perma-sidebar {
-    float: left;
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
     background-color: var(--accent);
     color: #f4f4f4;
     width: 40px;
-    height: 100%;
     padding: 0;
-    margin: 0 2em 0 0;
+    margin: 0;
     text-align: center;
+    z-index: 1;
+}
+
+.remark-slide-content:has(> .perma-sidebar) {
+    padding-left: calc(40px + 2em);
+}
+
+/* That padding also moves the *static position* of absolutely positioned
+   children, while `width: 100%` still resolves against the full padding box,
+   so a full-width overlay would start at the gutter and hang off the right
+   edge. Anchoring them explicitly restores exactly where they sat when the
+   rail was a float. Overlays that already set `left` (.bottom-box,
+   .slide-footer) are unaffected. */
+.remark-slide-content:has(> .perma-sidebar) > .section-mark,
+.remark-slide-content:has(> .perma-sidebar) > .middle {
+    left: 0;
 }
 
 .perma-sidebar p {
@@ -515,6 +544,65 @@ a {
 }
 
 /* ---------------------------------------------------------------------------
+   Vertically centred slide: `class: vcenter` in the slide's property block.
+
+       ---
+       class: vcenter
+
+       # Schedule
+
+       .boxed-content[ ... ]
+
+   The heading keeps its place at the top and everything after it is centred in
+   the height that is left. Put several blocks on the slide and they spread
+   evenly down that height instead: the free space is shared equally between
+   every auto margin, so one block centres and N blocks space out, from the
+   same single rule.
+
+   `.remark-slide-content` is a `table-cell` by default, which is how remark
+   does its own vertical alignment; only opted-in slides change. The running
+   rail needs no special handling here, because it is pinned to the slide
+   rather than floated inside the content.
+
+   Absolutely positioned children (`.remark-slide-number`, `.slide-footer`,
+   `.bottom-box`) are not flex items, so they are unaffected and keep sitting
+   wherever they were pinned.
+   --------------------------------------------------------------------------- */
+.remark-slide-content.vcenter {
+    display: flex;
+    flex-direction: column;
+}
+
+/* A flex box inside a `display: table` parent is wrapped in an anonymous
+   table-cell, and `height: 100%` then resolves against that anonymous box.
+   Chrome stretches it, Firefox does not -- so in Firefox the slide's white
+   background stopped short of the bottom while the pinned rail carried on,
+   leaving a grey band. Making the slide a block gives the column a definite
+   height to resolve against, and both engines then agree. */
+.remark-slide:has(> .remark-slide-content.vcenter) {
+    display: block;
+}
+
+/* Headings hold the top; every other block shares the remaining height. */
+.remark-slide-content.vcenter > :not(h1, h2, h3, .perma-sidebar) {
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+/* A pinned footer sits outside the flex flow, so spread content would run
+   underneath it. On a centred slide it joins the column as the last row
+   instead: still flush to the bottom, but now occupying height the content
+   above has to respect. The slide's own padding supplies the indent that the
+   absolute version got from `left` + `padding-left`. */
+.remark-slide-content.vcenter > .slide-footer {
+    position: static;
+    margin-top: auto;
+    margin-bottom: 0.7em;   /* the gap its `bottom` gave it when pinned */
+    width: 100%;
+    padding-left: 0;
+}
+
+/* ---------------------------------------------------------------------------
    Card decks: .cards + .card
 
    A row or grid of equal-weight boxes, for "four facts" / "four numbers" slides.
@@ -636,7 +724,7 @@ a {
 
 .cards .card .kicker {
     display: block;
-    font-size: 0.6em;
+    font-size: 0.83em;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: #999;
@@ -697,6 +785,9 @@ a {
     color: color-mix(in srgb, var(--accent) 55%, #fff);
 }
 
+.cards .card .section-icon.corner {
+    color: color-mix(in srgb, var(--accent) 15%, #fff);
+}
 .cards .card.accent .section-icon.corner {
     color: color-mix(in srgb, var(--accent) 25%, #fff);
 }
@@ -810,6 +901,92 @@ figcaption {
     color: #999;
     padding-right: 20px;
 }
+
+/* ---------------------------------------------------------------------------
+   Banded plan table: a whole-course schedule, one row per week, grouped into
+   sections that span their own weeks.
+
+   Authored as a raw <table> rather than a Markdown table, because Markdown has
+   no rowspan and the grouping is the whole point. Cell classes:
+
+     td.sec    the section name, rowspan-ed over its weeks
+     td.w      week number
+     td.d      a date
+     .mark     something that needs the eye (a swap, a graded session)
+     tr.band   shade a section's rows to separate it from its neighbours
+     tr.muted  a stretch that is not one of the graded sections
+   --------------------------------------------------------------------------- */
+.plan-table {
+    /* Mirror the gutter the rail leaves on the left, so the table sits with
+       equal air on both sides instead of hugging the rail. */
+    width: 100%;
+    padding-right: 2em;
+    box-sizing: border-box;
+}
+
+.plan-table table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.84em;
+    line-height: 1.3;
+    /* Fixed layout so the two topic columns stay equal instead of being sized
+       by whichever week happens to have the longest title. Widths are taken
+       from the header row. */
+    table-layout: fixed;
+}
+
+.plan-table thead th:nth-child(1) { width: 15%; }   /* section  */
+.plan-table thead th:nth-child(2) { width: 4%;  }   /* week     */
+.plan-table thead th:nth-child(3),
+.plan-table thead th:nth-child(5) { width: 8%;  }   /* dates    */
+.plan-table thead th:nth-child(4),
+.plan-table thead th:nth-child(6) { width: 32.5%; } /* topics   */
+
+.plan-table thead th {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 700;
+    text-align: left;
+    padding: 0.55em 0.8em;
+    white-space: nowrap;
+}
+
+.plan-table td {
+    padding: 0.4em 0.8em;
+    border-bottom: 1px solid #ededed;
+    vertical-align: middle;
+}
+
+.plan-table tbody tr:last-child td { border-bottom: none; }
+
+.plan-table td.sec {
+    font-weight: 700;
+    color: var(--accent);
+    white-space: nowrap;
+    border-right: 1px solid #ededed;
+}
+
+.plan-table td.w { text-align: center; color: #aaa; }
+.plan-table td.d { text-align: center; white-space: nowrap; color: #777; }
+
+.plan-table .mark {
+    display: block;        /* the annotation gets its own line under the topic */
+    color: var(--accent);
+    font-weight: 700;
+    white-space: nowrap;   /* an annotation should not break mid-phrase */
+}
+
+.plan-table .mark i {
+    margin-right: 0.3em;
+    font-size: 0.92em;
+}
+
+/* A wash, not a colour: the bands only need to say "same section", and
+   --accent-dim is strong enough to compete with the text on top of it. */
+.plan-table tr.band td { background: color-mix(in srgb, var(--accent) 6%, #fff); }
+
+.plan-table tr.muted td,
+.plan-table tr.muted td.sec { color: #aaa; }
 
 /* A plain readable table for authored Markdown. Unlike .program-table (a
    two-column time/content schedule, whose header is deliberately hidden) this
