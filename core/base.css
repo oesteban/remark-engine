@@ -842,9 +842,22 @@ a {
     font-weight: 600;
 }
 
+/* Greying a card means greying everything in it that is accent-coloured.
+   `strong` and `em` are accent by default (see the rules near the top), so
+   without this a muted card keeps bright pink bold text, which reads as the
+   opposite of muted. Same shape as the .gray-text em/strong pair. */
 .cards .card.muted { border-top-color: #ccc; }
 .cards .card.muted h3,
-.cards .card.muted .metric { color: #999; }
+.cards .card.muted .metric,
+.cards .card.muted .enum,
+.cards .card.muted em,
+.cards .card.muted strong { color: #999; }
+
+/* The section icon is a tint of the accent rather than the accent itself, so
+   it needs the tint of the grey, not the grey. Same 38% mix as --accent-tint. */
+.cards .card.muted .section-icon {
+    color: color-mix(in srgb, #999 38%, #fff);
+}
 
 .cards .card.accent { background: var(--accent-dim); }
 
