@@ -632,6 +632,8 @@ a {
    Emphasis, on .card:
      .muted             greyed out (a section that is not this one)
      .accent            filled with the dim accent
+   Hovering any card that is neither .muted nor .alert gives it the .accent
+   fill for as long as the pointer is on it.
    Spans inside a card:
      .kicker            uppercase eyebrow
      .metric            the big number
@@ -845,6 +847,28 @@ a {
 .cards .card.muted .metric { color: #999; }
 
 .cards .card.accent { background: var(--accent-dim); }
+
+/* Hover lights a card the way .accent does, so a pointer crossing a row shows
+   which one it is on. .muted and .alert keep their own colour, which is the
+   message on those cards; a card not yet revealed by ext/stepwise-svg.js is
+   `visibility: hidden` and takes no pointer events, so it cannot light up.
+
+   Deliberately not wrapped in @media (hover: hover). That guard is the textbook
+   answer for touch devices, but it also makes the rule invisible to headless
+   Chrome, which reports `hover: none`, so it could never be tested here. A
+   stranded highlight after a tap costs nothing on a slide and clears on the
+   next one. */
+.cards .card:not(.muted):not(.alert) {
+    transition: background-color 120ms ease-out;
+}
+
+.cards .card:not(.muted):not(.alert):hover {
+    background: var(--accent-dim);
+}
+
+.cards .card:not(.muted):not(.alert):hover .section-icon.corner {
+    color: color-mix(in srgb, var(--accent) 25%, #fff);
+}
 
 /* Section identity icon. One icon per course section, reused wherever that
    section is named, so the four sections stay recognisable from deck to deck.
