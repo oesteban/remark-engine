@@ -708,6 +708,38 @@ a {
     color: var(--accent);
 }
 
+/* A .steps block on a vertically-centred slide takes the height that is left
+   and shares it equally among its rows, so five steps read as five bands of
+   the slide rather than a short stack floating in the middle. The slide's
+   content box is a flex column there, so this is flex: 1 plus equal rows; no
+   magic offsets, and it follows the title whatever height the title takes. */
+.remark-slide-content.vcenter > .cards.steps {
+    flex: 1 1 auto;
+    /* a flex item will not shrink past its content without this */
+    min-height: 0;
+    /* span the content box rather than keep the float's 89% + 4% gutter, which
+       leaves a stripe of empty slide. The right inset is the 55px .cards.vcenter
+       uses, so a steps row ends where every other card row on the deck ends;
+       the left runs flush with the h1. */
+    width: auto;
+    padding-right: 0;
+    /* bottom margin clears the page number in the corner */
+    margin: 0.8em 55px 1.9em 0;
+    grid-auto-rows: 1fr;
+}
+
+/* In a row the corner is the right-hand end, not the top right: take the icon
+   out of the absolute corner, push it past the text, and let the row centre
+   it. The min-height reserve that keeps a grid card's heading clear of the
+   icon is meaningless here, so drop it. */
+.cards.steps .card > *:has(> .section-icon.corner) {
+    position: static;
+    margin-left: auto;
+    flex: 0 0 auto;
+}
+
+.cards.steps .card > *:has(> .section-icon.corner) + * { min-height: 0; }
+
 .cards.tight { gap: 10px; }
 
 /* Cards in a row are always equal height: `align-items: stretch` sizes every
@@ -718,7 +750,10 @@ a {
               Dashboard look; cards will have empty lower halves if the
               content is short.
    .vcenter   let the row take exactly the height its tallest card needs,
-              and centre it in the slide. Usually what you want. */
+              and centre it in the slide. Usually what you want.
+
+   A .steps block on a `class: vcenter` slide fills the remaining height and
+   divides it equally among its rows, without either of those two. */
 .cards.fill { min-height: 60%; }
 
 .cards.vcenter {
