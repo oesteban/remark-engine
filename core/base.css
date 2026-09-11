@@ -902,6 +902,22 @@ figcaption {
     padding-right: 20px;
 }
 
+/* One equation, given room to be the point of the slide. A hairline rule and
+   generous padding: anything heavier competes with the maths it is framing. */
+.formula {
+    display: inline-block;
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    padding: 0.3em 1.5em;
+    background: #fff;
+    font-size: 1.45em;   /* MathJax scales with the box, so size it here */
+}
+
+/* MathJax's display wrapper carries a 1em margin of its own, which doubles up
+   with the box padding. Class name differs by output jax, so reset both. */
+.formula .MathJax_Display,
+.formula .MJXc-display { margin: 0; }
+
 /* ---------------------------------------------------------------------------
    Banded plan table: a whole-course schedule, one row per week, grouped into
    sections that span their own weeks.
