@@ -107,13 +107,16 @@
     },
 
     // ----- Roster loader -----
+    // Two files, in order of preference:
+    //   roster.local.yml  the real names. Keep it out of version control, so
+    //                     that no accident can publish it.
+    //   roster.yml        the committed placeholder, published with the deck.
+    // The first one that parses to a non-empty list wins.
     async _loadRoster() {
       try {
-        const url = new URL('roster.yml', window.location.href);
-        const res = await fetch(url.toString(), { cache: 'no-store' });
-        if (!res.ok) throw new Error(`roster.yml ${res.status}`);
-        const text = await res.text();
-        const parsed = parseRosterYAML(text);
+        const parsed = await this._fetchRoster('roster.local.yml')
+                    || await this._fetchRoster('roster.yml');
+        if (!parsed) throw new Error('no roster');
         if (parsed.attendees.length) this.state.attendees = parsed.attendees;
         if (parsed.observers.length) this.state.observers = parsed.observers;
         if (parsed.organizers.length) this.state.organizers = parsed.organizers;
@@ -124,6 +127,19 @@
         this._readyCallbacks.splice(0).forEach(fn => { try { fn(); } catch {} });
       }
     },
+    async _fetchRoster(name) {
+      try {
+        const url = new URL(name, window.location.href);
+        const res = await fetch(url.toString(), { cache: 'no-store' });
+        if (!res.ok) return null;          // absent is the normal case for the local file
+        const parsed = parseRosterYAML(await res.text());
+        return parsed.attendees.length || parsed.observers.length || parsed.organizers.length
+          ? parsed : null;
+      } catch (_) {
+        return null;
+      }
+    },
+
     _onRosterReady(cb) {
       if (this._rosterReady) cb(); else this._readyCallbacks.push(cb);
     },

@@ -43,6 +43,29 @@ vendor/
   asciinema-player/  Vendored player CSS + JS
 ```
 
+## Roster (`ext/roulette.js`)
+
+`roulette.js` picks names from a roster it **fetches at run time**, relative to
+the deck's own URL. Two file names are tried, in order:
+
+| file | holds | in git |
+|---|---|---|
+| `roster.local.yml` | the real names | **never**, add it to `.gitignore` |
+| `roster.yml` | a synthetic placeholder | tracked, published with the deck |
+
+The first one that parses to a non-empty list wins; a missing local file is the
+normal case and costs one 404. Both live next to the deck, so a repository with
+several decks symlinks one file into each directory.
+
+> **A consuming repository that is public must ignore `roster.local.yml`.**
+> Whatever is committed is served to anyone who opens the deck. Ignoring the
+> file is what makes `git add` refuse it: `git add -A` and `git add .` skip it,
+> and `git add roster.local.yml` exits non-zero. Keep the tracked `roster.yml`
+> synthetic so the published deck still has names to draw.
+
+The lists are `attendees`, `observers` and `organizers`. Names may carry a
+trailing `# comment`, which is stripped.
+
 ## Theming
 
 `core/base.css` uses CSS custom properties. Theme files override `:root` variables only:
