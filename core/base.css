@@ -626,7 +626,7 @@ a {
      (default)          auto-fit, min 220px, wraps as needed
      .cols-1 ... .cols-5 fixed column count
      .rows-2            two rows, columns derived from the card count
-     .steps             one column, each card a row: .step[] number then text
+     .steps             one column, each card a row: .enum[] number then text
      .tight             half gap
      .fill              stretch to most of the slide height
    Emphasis, on .card:
@@ -636,7 +636,7 @@ a {
      .kicker            uppercase eyebrow
      .metric            the big number
      .metric-unit       smaller suffix on the big number
-     .step              the step number in a .steps row
+     .enum              the number in a .steps row
      .foot              sinks to the bottom of the card
    --------------------------------------------------------------------------- */
 .cards {
@@ -672,7 +672,7 @@ a {
 
      .cards.steps[
      .card[
-     .step[1]
+     .enum[1]
 
      Draw one topic
      ]
@@ -692,14 +692,14 @@ a {
 
 /* the number's paragraph: fixed width so every row's text starts on the same
    left edge, whatever the number's digit count */
-.cards.steps .card > *:has(> .step) {
+.cards.steps .card > *:has(> .enum) {
     flex: 0 0 1.5em;
     margin: 0;
 }
 
-.cards.steps .card > *:has(> .step) + * { flex: 1 1 auto; margin: 0; }
+.cards.steps .card > *:has(> .enum) + * { flex: 1 1 auto; margin: 0; }
 
-.cards .card .step {
+.cards .card .enum {
     display: block;
     text-align: center;
     font-size: 1.9em;
@@ -740,20 +740,6 @@ a {
 
 .cards.steps .card > *:has(> .section-icon.corner) + * { min-height: 0; }
 
-/* Reveal a steps block one row at a time across `count: false` slides: repeat
-   the slide, cap what is visible with .upto-N, and the slide counter does not
-   move. Enumerated like .cols-1 ... .cols-5 rather than computed, because CSS
-   cannot count.
-
-   Hidden, not absent: the rows keep their space, so nothing shifts as the
-   sequence advances and the last step is identical to the plain block. */
-.cards.steps.upto-1 .card:nth-child(n + 2),
-.cards.steps.upto-2 .card:nth-child(n + 3),
-.cards.steps.upto-3 .card:nth-child(n + 4),
-.cards.steps.upto-4 .card:nth-child(n + 5),
-.cards.steps.upto-5 .card:nth-child(n + 6),
-.cards.steps.upto-6 .card:nth-child(n + 7) { visibility: hidden; }
-
 .cards.tight { gap: 10px; }
 
 /* Cards in a row are always equal height: `align-items: stretch` sizes every
@@ -768,8 +754,9 @@ a {
 
    A .steps block on a `class: vcenter` slide fills the remaining height and
    divides it equally among its rows, without either of those two.
-   .upto-N caps how many of its rows are visible, for revealing them one at a
-   time across `count: false` slides. */
+   To reveal its rows one at a time, mark the cards .step-1 ... .step-N and put
+   `class: stepwise` on the slide; ext/stepwise-svg.js does the rest, on one
+   slide, so the counter does not move. */
 .cards.fill { min-height: 60%; }
 
 .cards.vcenter {
