@@ -630,6 +630,7 @@ a {
      .tight             half gap
      .fill              stretch to most of the slide height
    Emphasis, on .card:
+     .wide              spans every column, for a full-width row
      .muted             greyed out (a section that is not this one)
      .accent            filled with the dim accent
    Hovering any card that is neither .muted nor .alert gives it the .accent
@@ -741,6 +742,12 @@ a {
 }
 
 .cards.steps .card > *:has(> .section-icon.corner) + * { min-height: 0; }
+
+/* A card that takes the whole row: "three across, then one wide" from a single
+   .cards.cols-3 block, rather than stacking a second .cards under the first.
+   One grid means the rows share their column edges, and a step sequence can
+   run through every card without crossing a block boundary. */
+.cards .card.wide { grid-column: 1 / -1; }
 
 .cards.tight { gap: 10px; }
 
