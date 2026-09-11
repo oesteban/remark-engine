@@ -626,6 +626,7 @@ a {
      (default)          auto-fit, min 220px, wraps as needed
      .cols-1 ... .cols-5 fixed column count
      .rows-2            two rows, columns derived from the card count
+     .steps             one column, each card a row: .step[] number then text
      .tight             half gap
      .fill              stretch to most of the slide height
    Emphasis, on .card:
@@ -635,6 +636,7 @@ a {
      .kicker            uppercase eyebrow
      .metric            the big number
      .metric-unit       smaller suffix on the big number
+     .step              the step number in a .steps row
      .foot              sinks to the bottom of the card
    --------------------------------------------------------------------------- */
 .cards {
@@ -661,6 +663,49 @@ a {
     grid-template-rows: 1fr 1fr;
     grid-auto-flow: column;
     grid-auto-columns: minmax(0, 1fr);
+}
+
+/* One column of cards that read as rows: a step number on the left, the step
+   on the right. For an ordered sequence, where a grid of equal boxes would
+   hide the order. The number goes in its own paragraph so that it becomes a
+   flex item of the card and the text can wrap with a hanging indent:
+
+     .cards.steps[
+     .card[
+     .step[1]
+
+     Draw one topic
+     ]
+     ]                                                                        */
+.cards.steps {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+}
+
+.cards.steps .card {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.65em;
+    padding-top: 0.4em;
+    padding-bottom: 0.4em;
+}
+
+/* the number's paragraph: fixed width so every row's text starts on the same
+   left edge, whatever the number's digit count */
+.cards.steps .card > *:has(> .step) {
+    flex: 0 0 1.5em;
+    margin: 0;
+}
+
+.cards.steps .card > *:has(> .step) + * { flex: 1 1 auto; margin: 0; }
+
+.cards .card .step {
+    display: block;
+    text-align: center;
+    font-size: 1.9em;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--accent);
 }
 
 .cards.tight { gap: 10px; }
