@@ -98,7 +98,14 @@
 .gr-overlay{
   position: static;
   left: auto; right: auto; top: auto; bottom: auto;
-  margin-top: 40px;           /* space above the grid inside the box */
+  /* The overlay lands inside .boxed-content when there is one, and on the bare
+     slide otherwise. A bare slide's content is often floated -- .cards and
+     .boxed-content both are -- and a grid box does not shrink around a float,
+     it renders underneath it. Clear first, then take the gap. */
+  clear: both;
+  /* padding, not margin: clearance swallows a top margin, so the gap would
+     vanish on exactly the slides that need the clear. */
+  padding-top: 40px;
   z-index: 90;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -106,6 +113,11 @@
   align-content: start;
   pointer-events: auto; /* allow selection/copy */
 }
+
+/* Inside .boxed-content the overlay inherits that box's inset. On a bare slide
+   it has the content box to itself, which runs to the slide's right edge, so
+   the last group would sit flush against it. Stop where a card row stops. */
+.remark-slide-content > .gr-overlay { margin-right: 55px; }
 
 /* Group card */
 .gr-group{

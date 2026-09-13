@@ -13,6 +13,24 @@
   --accent-dark: var(--accent);
   --heading-color: #738373;
 
+  /* The one risk colour: .card.alert's rule, .admonition.warning's rule, icon
+     and emphasis. A theme sets it when its accent would fight the default red
+     -- two saturated hues ~30 deg apart at the same lightness vibrate against
+     each other, which is what magenta + #d40000 did. Wash is derived, so a
+     theme only ever sets --warning. */
+  --warning: #d40000;
+  --warning-wash: color-mix(in srgb, var(--warning) 6%, #fff);
+
+  /* --- Question ------------------------------------------------------------
+     The third semantic colour, for an admonition that asks rather than warns.
+     It has to sit far from the accent AND far from --warning, or a deck that
+     uses both grows two colours that read as the same alarm. Teal by default:
+     hue 175, which is 156 deg from the default red and 156 from the HES-SO
+     magenta, and cool where both of those are hot. Wash is derived, so a theme
+     only ever sets --question. */
+  --question: #0f766e;
+  --question-wash: color-mix(in srgb, var(--question) 6%, #fff);
+
   /* --- Logo overlay --- */
   --logo-url: none;
   --logo-width: clamp(80px, 14vw, 160px);
@@ -248,6 +266,44 @@ a {
     color: #888;
 }
 
+/* ---------------------------------------------------------------------------
+   .bar[D] -- a macron over its content, written in CSS rather than in math.
+
+       .bar[**D**] averages your six **D**.
+
+   The alternative was MathJax, and `$\bar{D}$` drags a serif glyph into a deck
+   that has none: MathJax 2.7 ships no sans face to switch to (TeX, STIX-Web,
+   Asana-Math, the two Gyres, Latin-Modern, Neo-Euler, all serif), `\text{}`
+   resolves to the roman MathJax_Main, and `\mathsf{}` reaches variables but
+   not operator names, digits or stretchy delimiters. A rule drawn here inherits
+   the deck's own family, weight and colour instead, which is why `currentColor`
+   rather than a literal: inside `.bar[**D**]` the letter is `strong` and
+   therefore accent-coloured, and the rule follows it.
+
+   remark renders a content class as a <span> unless its content contains
+   block-level Markdown, so `.bar[D]` is inline, as it must be.
+
+   A pseudo-element rather than `text-decoration: overline`, which sits at the
+   font's overline metric -- a long way above the cap in Urbanist -- and cannot
+   be tuned. `line-height: 1` is what makes the offset mean the same thing
+   everywhere: it fixes the inline-block's height at 1em, so the rule does not
+   drift when the surrounding leading changes.
+   --------------------------------------------------------------------------- */
+.bar {
+    position: relative;
+    display: inline-block;
+    line-height: 1;
+}
+
+.bar::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0.02em;
+    border-top: 0.06em solid currentColor;
+}
+
 .gray-text em,
 .gray-text strong {
     color: #888;
@@ -270,15 +326,44 @@ a {
     color: var(--accent);
 }
 
+/* The running rail is chrome, not content.
+
+   It used to be a `float: left` inside the content flow, which made every
+   layout mode work around it: a float is ignored on a flex item, its painted
+   height depended on the content box, and any slide whose content did not
+   fill the slide left the rail (and the white behind it) stopping short.
+
+   Pinned to the slide box instead, it is full height by construction, whatever
+   the content does, and no layout mode has to know it exists. The gutter it
+   used to reserve with `margin-right` is given back as padding on the slide,
+   applied only where a rail is actually present. */
 .perma-sidebar {
-    float: left;
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
     background-color: var(--accent);
     color: #f4f4f4;
     width: 40px;
-    height: 100%;
     padding: 0;
-    margin: 0 2em 0 0;
+    margin: 0;
     text-align: center;
+    z-index: 1;
+}
+
+.remark-slide-content:has(> .perma-sidebar) {
+    padding-left: calc(40px + 2em);
+}
+
+/* That padding also moves the *static position* of absolutely positioned
+   children, while `width: 100%` still resolves against the full padding box,
+   so a full-width overlay would start at the gutter and hang off the right
+   edge. Anchoring them explicitly restores exactly where they sat when the
+   rail was a float. Overlays that already set `left` (.bottom-box,
+   .slide-footer) are unaffected. */
+.remark-slide-content:has(> .perma-sidebar) > .section-mark,
+.remark-slide-content:has(> .perma-sidebar) > .middle {
+    left: 0;
 }
 
 .perma-sidebar p {
@@ -506,12 +591,184 @@ a {
     box-sizing: border-box;
 }
 
+/* ---------------------------------------------------------------------------
+   Admonition: the consequence line, pinned under the content it qualifies.
+
+   A card says what something *is*; an admonition says what happens when you
+   get it wrong. It spans the row rather than joining it, carries no heading,
+   and is the last thing read on the slide, so it is its own component and not
+   a fifth .card.
+
+     .admonition.warning[
+     <i class="fa-solid fa-triangle-exclamation"></i> Miss either quiz, or ...
+     ]
+
+   Left edge is .cards.vcenter's, so the box lines up with the card row above
+   it and with the h1. The right edge is .slide-footer's instead: a box that
+   ran to the card row's right edge (55px) would pass under the slide counter
+   pinned in the corner, and a bordered box crossing the number is a collision
+   where a strip of running text was not. `.slide-footer` is left 40px + width
+   89%, which is 11% - 40px in from the right; matching it leaves the counter
+   the same corner it always had.
+   --------------------------------------------------------------------------- */
+.admonition {
+    position: absolute;
+    /* Higher than .slide-footer's 0.7em: a bordered box reads as an object
+       sitting on the slide, and an object flush to the edge reads as having
+       slipped off it. A strip of text has no edge to be flush with. */
+    bottom: 1.6em;
+    left: 88px;
+    right: calc(11% - 40px);
+    box-sizing: border-box;
+    /* card vocabulary: same radius, hairline and shadow, so an admonition and
+       a card read as one system. The 4px rule moves to the left edge, where a
+       row of cards already spends its top edge. */
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-left: 4px solid var(--accent);
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    padding: 0.5em 0.85em;
+    font-size: 0.9em;
+    line-height: 1.35;
+}
+
+/* Markdown wraps the text in its own <p>; unmargined, the box hugs one line. */
+.admonition p { margin: 0; }
+
+/* The warning flavour borrows .card.alert's red, so "this one costs you"
+   is the same colour across the deck whichever shape carries it. Bold and
+   italic are accent-coloured by default (see the rules near the top), and
+   magenta inside a red box reads as two warnings, not one. */
+.admonition.warning {
+    border-left-color: var(--warning);
+    background: var(--warning-wash);
+}
+
+.admonition.warning .fa-solid,
+.admonition.warning em,
+.admonition.warning strong {
+    color: var(--warning);
+}
+
+/* The question flavour asks instead of warning. Same shape, different token:
+   a deck can then put a consequence on one slide and an open question on the
+   next without the two reading as the same alarm. */
+.admonition.question {
+    border-left-color: var(--question);
+    background: var(--question-wash);
+}
+
+.admonition.question .fa-solid,
+.admonition.question em,
+.admonition.question strong {
+    color: var(--question);
+}
+
+/* Same trap as .slide-footer on a `class: vcenter` slide: pinned content would
+   sit under the spread-out column. Join the column as its last row instead. */
+.remark-slide-content.vcenter > .admonition {
+    position: static;
+    margin-top: auto;
+    margin-bottom: 1.6em;   /* the gap its `bottom` gave it when pinned */
+    /* width:100% of the content box is wider than the pinned version's
+       right inset, which puts the box under the slide number in the corner.
+       Stop where a .vcenter card row stops instead. */
+    width: auto;
+    margin-right: 55px;
+}
+
+/* A row block normally takes the height that is left and divides it among its
+   rows. With an admonition below it that is the wrong instinct: the rows
+   stretch into the admonition's space and push it off the bottom edge. Size to
+   content instead and centre in what is left, and let the admonition keep the
+   corner. Its own auto top margin then has nothing to do, so drop it, or the
+   free space splits three ways and the box floats above the bottom. */
+.remark-slide-content.vcenter:has(> .admonition) > .cards {
+    flex: 0 1 auto;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.remark-slide-content.vcenter:has(> .cards) > .admonition {
+    margin-top: 0;
+}
+
+/* A card block on a centred slide spans the slide the way .cards.vcenter does,
+   rather than keeping the float's 89% + 4% gutter: otherwise its right edge
+   stops short of the admonition's underneath it. .steps and .goals set the
+   same inset themselves. */
+.remark-slide-content.vcenter > .cards {
+    width: auto;
+    padding-right: 0;
+    margin-right: 55px;
+}
+
 .distribute {
     display: flex;
     justify-content: space-between;
     flex-direction: column;
     height: 80%;
     width: 100%;
+}
+
+/* ---------------------------------------------------------------------------
+   Vertically centred slide: `class: vcenter` in the slide's property block.
+
+       ---
+       class: vcenter
+
+       # Schedule
+
+       .boxed-content[ ... ]
+
+   The heading keeps its place at the top and everything after it is centred in
+   the height that is left. Put several blocks on the slide and they spread
+   evenly down that height instead: the free space is shared equally between
+   every auto margin, so one block centres and N blocks space out, from the
+   same single rule.
+
+   `.remark-slide-content` is a `table-cell` by default, which is how remark
+   does its own vertical alignment; only opted-in slides change. The running
+   rail needs no special handling here, because it is pinned to the slide
+   rather than floated inside the content.
+
+   Absolutely positioned children (`.remark-slide-number`, `.slide-footer`,
+   `.bottom-box`) are not flex items, so they are unaffected and keep sitting
+   wherever they were pinned.
+   --------------------------------------------------------------------------- */
+.remark-slide-content.vcenter {
+    display: flex;
+    flex-direction: column;
+}
+
+/* A flex box inside a `display: table` parent is wrapped in an anonymous
+   table-cell, and `height: 100%` then resolves against that anonymous box.
+   Chrome stretches it, Firefox does not -- so in Firefox the slide's white
+   background stopped short of the bottom while the pinned rail carried on,
+   leaving a grey band. Making the slide a block gives the column a definite
+   height to resolve against, and both engines then agree. */
+.remark-slide:has(> .remark-slide-content.vcenter) {
+    display: block;
+}
+
+/* Headings hold the top; every other block shares the remaining height. */
+.remark-slide-content.vcenter > :not(h1, h2, h3, .perma-sidebar) {
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+/* A pinned footer sits outside the flex flow, so spread content would run
+   underneath it. On a centred slide it joins the column as the last row
+   instead: still flush to the bottom, but now occupying height the content
+   above has to respect. The slide's own padding supplies the indent that the
+   absolute version got from `left` + `padding-left`. */
+.remark-slide-content.vcenter > .slide-footer {
+    position: static;
+    margin-top: auto;
+    margin-bottom: 0.7em;   /* the gap its `bottom` gave it when pinned */
+    width: 100%;
+    padding-left: 0;
 }
 
 /* ---------------------------------------------------------------------------
@@ -538,15 +795,22 @@ a {
      (default)          auto-fit, min 220px, wraps as needed
      .cols-1 ... .cols-5 fixed column count
      .rows-2            two rows, columns derived from the card count
+     .steps             one column, each card a row: .enum[] number then text
+     .goals             one column of aims: .marker[] icon then claim and gloss
      .tight             half gap
      .fill              stretch to most of the slide height
    Emphasis, on .card:
+     .wide              spans every column, for a full-width row
      .muted             greyed out (a section that is not this one)
      .accent            filled with the dim accent
+   Hovering any card that is neither .muted nor .alert gives it the .accent
+   fill for as long as the pointer is on it.
    Spans inside a card:
      .kicker            uppercase eyebrow
      .metric            the big number
      .metric-unit       smaller suffix on the big number
+     .enum              the number in a .steps row
+     .marker            the icon in a .goals row
      .foot              sinks to the bottom of the card
    --------------------------------------------------------------------------- */
 .cards {
@@ -575,6 +839,177 @@ a {
     grid-auto-columns: minmax(0, 1fr);
 }
 
+/* One column of cards that read as rows: a step number on the left, the step
+   on the right. For an ordered sequence, where a grid of equal boxes would
+   hide the order. The number goes in its own paragraph so that it becomes a
+   flex item of the card and the text can wrap with a hanging indent:
+
+     .cards.steps[
+     .card[
+     .enum[1]
+
+     Draw one topic
+     ]
+     ]                                                                        */
+.cards.steps {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+}
+
+.cards.steps .card {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.65em;
+    padding-top: 0.4em;
+    padding-bottom: 0.4em;
+}
+
+/* the number's paragraph: fixed width so every row's text starts on the same
+   left edge, whatever the number's digit count */
+.cards.steps .card > *:has(> .enum) {
+    flex: 0 0 1.5em;
+    margin: 0;
+}
+
+.cards.steps .card > *:has(> .enum) + * { flex: 1 1 auto; margin: 0; }
+
+.cards .card .enum {
+    display: block;
+    text-align: center;
+    font-size: 1.9em;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--accent);
+}
+
+/* A .steps block on a vertically-centred slide takes the height that is left
+   and shares it equally among its rows, so five steps read as five bands of
+   the slide rather than a short stack floating in the middle. The slide's
+   content box is a flex column there, so this is flex: 1 plus equal rows; no
+   magic offsets, and it follows the title whatever height the title takes. */
+.remark-slide-content.vcenter > .cards.steps {
+    flex: 1 1 auto;
+    /* a flex item will not shrink past its content without this */
+    min-height: 0;
+    /* span the content box rather than keep the float's 89% + 4% gutter, which
+       leaves a stripe of empty slide. The right inset is the 55px .cards.vcenter
+       uses, so a steps row ends where every other card row on the deck ends;
+       the left runs flush with the h1. */
+    width: auto;
+    padding-right: 0;
+    /* bottom margin clears the page number in the corner */
+    margin: 0.8em 55px 1.9em 0;
+    grid-auto-rows: 1fr;
+}
+
+/* In a row the corner is the right-hand end, not the top right: take the icon
+   out of the absolute corner, push it past the text, and let the row centre
+   it. The min-height reserve that keeps a grid card's heading clear of the
+   icon is meaningless here, so drop it. */
+.cards.steps .card > *:has(> .section-icon.corner) {
+    position: static;
+    margin-left: auto;
+    flex: 0 0 auto;
+}
+
+.cards.steps .card > *:has(> .section-icon.corner) + * { min-height: 0; }
+
+/* ---------------------------------------------------------------------------
+   .cards.goals — one column of aims: an icon, a claim, and its gloss.
+
+   The Objectives slide of four decks was the same thing built four times: a
+   .boxed-content list, a circle-right glyph, .large on the claim, .gray-text on
+   the qualifier, .indent to pull the qualifier under the claim, and a <br /> to
+   fake the rhythm between items. Three of the four disagreed about the font
+   sizes and two about the gloss syntax. This is that shape as a component, so a
+   deck writes the words and nothing else.
+
+     .cards.goals[
+     .card[
+     .marker[<i class="fa-solid fa-circle-right"></i>]
+
+     Apply **DAGs** to represent a pipeline
+     .gray-text[nesting and flattening the same computation]
+     ]
+     ]
+
+   The icon sits in its own fixed-width flex column, so the gloss lines up under
+   the claim without .indent's magic 43px. Claim and gloss have to stay in the
+   SAME paragraph -- a third child of the card becomes a third flex item and
+   lands beside the claim rather than under it -- so keep them on consecutive
+   lines with no blank line between.
+
+   Hovering a goal lights it like any other card; that rule is above and needs
+   nothing here.                                                              */
+.cards.goals { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+
+.cards.goals .card {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5em;
+    padding-top: 0.3em;
+    padding-bottom: 0.3em;
+    font-size: 1.18em;
+}
+
+/* the icon's paragraph: fixed width so every claim starts on the same edge */
+.cards.goals .card > *:has(> .marker) { flex: 0 0 1.3em; margin: 0; }
+
+/* This paragraph holds both the claim and its gloss, so its leading is how a
+   long CLAIM wraps. Keep it comfortable and let the gloss close the gap from
+   its own side; tightening this instead cramps any claim that runs to two
+   lines, which is the trap the <br /> version fell into. */
+.cards.goals .card > *:has(> .marker) + * {
+    flex: 1 1 auto;
+    margin: 0;
+    line-height: 1.25;
+}
+
+.cards .card .marker {
+    display: block;
+    text-align: center;
+    font-size: 1.15em;
+    line-height: 1;
+    color: var(--accent);
+}
+
+/* A block, not a second line after a <br />: as inline content its line box
+   could never be shorter than the paragraph's strut, so the small gloss always
+   sat a full claim-line away and shrinking it only widened the gap. As a block
+   it owns its own leading and its own distance from the claim. */
+.cards.goals .card .gray-text {
+    display: block;
+    font-size: 0.9em;
+    line-height: 1.3;
+    margin-top: -0.1em;
+}
+
+/* A lone goal row is a statement, not a list, and can afford the air: the
+   component's padding is tuned for two-line rows stacked four to six deep. */
+.cards.goals .card:only-child {
+    padding-top: 0.75em;
+    padding-bottom: 0.75em;
+}
+
+.cards.goals:has(> .card:only-child) { margin-top: 1.5em; }
+
+/* Same deal as .steps on a vertically-centred slide: take the height that is
+   left and share it equally among the goals, so six aims read as six bands. */
+.remark-slide-content.vcenter > .cards.goals {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: auto;
+    padding-right: 0;
+    margin: 0.7em 55px 1.9em 0;
+    grid-auto-rows: minmax(0, 1fr);
+}
+
+/* A card that takes the whole row: "three across, then one wide" from a single
+   .cards.cols-3 block, rather than stacking a second .cards under the first.
+   One grid means the rows share their column edges, and a step sequence can
+   run through every card without crossing a block boundary. */
+.cards .card.wide { grid-column: 1 / -1; }
+
 .cards.tight { gap: 10px; }
 
 /* Cards in a row are always equal height: `align-items: stretch` sizes every
@@ -585,7 +1020,13 @@ a {
               Dashboard look; cards will have empty lower halves if the
               content is short.
    .vcenter   let the row take exactly the height its tallest card needs,
-              and centre it in the slide. Usually what you want. */
+              and centre it in the slide. Usually what you want.
+
+   A .steps block on a `class: vcenter` slide fills the remaining height and
+   divides it equally among its rows, without either of those two.
+   To reveal its rows one at a time, mark the cards .step-1 ... .step-N and put
+   `class: stepwise` on the slide; ext/stepwise-svg.js does the rest, on one
+   slide, so the counter does not move. */
 .cards.fill { min-height: 60%; }
 
 .cards.vcenter {
@@ -621,6 +1062,38 @@ a {
     line-height: 1.35;
 }
 
+/* A row wears its accent on the left, not on top.
+
+   The 4px rule is the card's marker, and on a grid card the top is the short
+   edge the eye lands on first. Turn the card into a row -- .steps, .goals and
+   any .cols-1 are all one column of wide cards -- and the top becomes the long
+   edge, so the rule reads as a divider between rows rather than as a marker on
+   each of them. On the left it is the short edge again, and it matches the
+   .admonition, which has worn its rule there all along for the same reason. */
+.cards.cols-1 .card,
+.cards.steps .card,
+.cards.goals .card {
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    border-left: 4px solid var(--accent);
+}
+
+/* .muted and .alert colour whichever edge the card is actually wearing.
+   Without this a muted row keeps a bright accent rule down its side, which is
+   the same mistake the greying rules below exist to avoid. */
+.cards.cols-1 .card.muted,
+.cards.steps .card.muted,
+.cards.goals .card.muted {
+    border-top-color: rgba(0, 0, 0, 0.08);
+    border-left-color: #ccc;
+}
+
+.cards.cols-1 .card.alert,
+.cards.steps .card.alert,
+.cards.goals .card.alert {
+    border-top-color: rgba(0, 0, 0, 0.08);
+    border-left-color: var(--warning);
+}
+
 .cards .card > :first-child { margin-top: 0; }
 .cards .card > :last-child { margin-bottom: 0; }
 
@@ -636,7 +1109,7 @@ a {
 
 .cards .card .kicker {
     display: block;
-    font-size: 0.6em;
+    font-size: 0.83em;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: #999;
@@ -669,11 +1142,46 @@ a {
     font-weight: 600;
 }
 
+/* Greying a card means greying everything in it that is accent-coloured.
+   `strong` and `em` are accent by default (see the rules near the top), so
+   without this a muted card keeps bright pink bold text, which reads as the
+   opposite of muted. Same shape as the .gray-text em/strong pair. */
 .cards .card.muted { border-top-color: #ccc; }
 .cards .card.muted h3,
-.cards .card.muted .metric { color: #999; }
+.cards .card.muted .metric,
+.cards .card.muted .enum,
+.cards .card.muted em,
+.cards .card.muted strong { color: #999; }
+
+/* The section icon is a tint of the accent rather than the accent itself, so
+   it needs the tint of the grey, not the grey. Same 38% mix as --accent-tint. */
+.cards .card.muted .section-icon {
+    color: color-mix(in srgb, #999 38%, #fff);
+}
 
 .cards .card.accent { background: var(--accent-dim); }
+
+/* Hover lights a card the way .accent does, so a pointer crossing a row shows
+   which one it is on. .muted and .alert keep their own colour, which is the
+   message on those cards; a card not yet revealed by ext/stepwise-svg.js is
+   `visibility: hidden` and takes no pointer events, so it cannot light up.
+
+   Deliberately not wrapped in @media (hover: hover). That guard is the textbook
+   answer for touch devices, but it also makes the rule invisible to headless
+   Chrome, which reports `hover: none`, so it could never be tested here. A
+   stranded highlight after a tap costs nothing on a slide and clears on the
+   next one. */
+.cards .card:not(.muted):not(.alert) {
+    transition: background-color 120ms ease-out;
+}
+
+.cards .card:not(.muted):not(.alert):hover {
+    background: var(--accent-dim);
+}
+
+.cards .card:not(.muted):not(.alert):hover .section-icon.corner {
+    color: color-mix(in srgb, var(--accent) 25%, #fff);
+}
 
 /* Section identity icon. One icon per course section, reused wherever that
    section is named, so the four sections stay recognisable from deck to deck.
@@ -697,6 +1205,9 @@ a {
     color: color-mix(in srgb, var(--accent) 55%, #fff);
 }
 
+.cards .card .section-icon.corner {
+    color: color-mix(in srgb, var(--accent) 15%, #fff);
+}
 .cards .card.accent .section-icon.corner {
     color: color-mix(in srgb, var(--accent) 25%, #fff);
 }
@@ -740,12 +1251,13 @@ a {
 }
 
 /* Hard-stop card: the one column on a slide that means "do not continue". */
-.cards .card.alert { border-top-color: #d40000; }
-.cards .card.alert h3 { color: #d40000; }
+.cards .card.alert { border-top-color: var(--warning); }
+.cards .card.alert h3 { color: var(--warning); }
 
 /* Shadows cost toner and add nothing on paper. */
 @media print {
-    .cards .card { box-shadow: none; }
+    .cards .card,
+    .admonition { box-shadow: none; }
 }
 
 .cut-right {
@@ -810,6 +1322,108 @@ figcaption {
     color: #999;
     padding-right: 20px;
 }
+
+/* One equation, given room to be the point of the slide. A hairline rule and
+   generous padding: anything heavier competes with the maths it is framing. */
+.formula {
+    display: inline-block;
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    padding: 0.3em 1.5em;
+    background: #fff;
+    font-size: 1.45em;   /* MathJax scales with the box, so size it here */
+}
+
+/* MathJax's display wrapper carries a 1em margin of its own, which doubles up
+   with the box padding. Class name differs by output jax, so reset both. */
+.formula .MathJax_Display,
+.formula .MJXc-display { margin: 0; }
+
+/* ---------------------------------------------------------------------------
+   Banded plan table: a whole-course schedule, one row per week, grouped into
+   sections that span their own weeks.
+
+   Authored as a raw <table> rather than a Markdown table, because Markdown has
+   no rowspan and the grouping is the whole point. Cell classes:
+
+     td.sec    the section name, rowspan-ed over its weeks
+     td.w      week number
+     td.d      a date
+     .mark     something that needs the eye (a swap, a graded session)
+     tr.band   shade a section's rows to separate it from its neighbours
+     tr.muted  a stretch that is not one of the graded sections
+   --------------------------------------------------------------------------- */
+.plan-table {
+    /* Mirror the gutter the rail leaves on the left, so the table sits with
+       equal air on both sides instead of hugging the rail. */
+    width: 100%;
+    padding-right: 2em;
+    box-sizing: border-box;
+}
+
+.plan-table table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.84em;
+    line-height: 1.3;
+    /* Fixed layout so the two topic columns stay equal instead of being sized
+       by whichever week happens to have the longest title. Widths are taken
+       from the header row. */
+    table-layout: fixed;
+}
+
+.plan-table thead th:nth-child(1) { width: 15%; }   /* section  */
+.plan-table thead th:nth-child(2) { width: 4%;  }   /* week     */
+.plan-table thead th:nth-child(3),
+.plan-table thead th:nth-child(5) { width: 8%;  }   /* dates    */
+.plan-table thead th:nth-child(4),
+.plan-table thead th:nth-child(6) { width: 32.5%; } /* topics   */
+
+.plan-table thead th {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 700;
+    text-align: left;
+    padding: 0.55em 0.8em;
+    white-space: nowrap;
+}
+
+.plan-table td {
+    padding: 0.4em 0.8em;
+    border-bottom: 1px solid #ededed;
+    vertical-align: middle;
+}
+
+.plan-table tbody tr:last-child td { border-bottom: none; }
+
+.plan-table td.sec {
+    font-weight: 700;
+    color: var(--accent);
+    white-space: nowrap;
+    border-right: 1px solid #ededed;
+}
+
+.plan-table td.w { text-align: center; color: #aaa; }
+.plan-table td.d { text-align: center; white-space: nowrap; color: #777; }
+
+.plan-table .mark {
+    display: block;        /* the annotation gets its own line under the topic */
+    color: var(--accent);
+    font-weight: 700;
+    white-space: nowrap;   /* an annotation should not break mid-phrase */
+}
+
+.plan-table .mark i {
+    margin-right: 0.3em;
+    font-size: 0.92em;
+}
+
+/* A wash, not a colour: the bands only need to say "same section", and
+   --accent-dim is strong enough to compete with the text on top of it. */
+.plan-table tr.band td { background: color-mix(in srgb, var(--accent) 6%, #fff); }
+
+.plan-table tr.muted td,
+.plan-table tr.muted td.sec { color: #aaa; }
 
 /* A plain readable table for authored Markdown. Unlike .program-table (a
    two-column time/content schedule, whose header is deliberately hidden) this

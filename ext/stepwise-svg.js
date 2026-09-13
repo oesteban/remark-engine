@@ -80,12 +80,45 @@
     return false;
   }
 
+  // A step index may be written two ways. `data-step="3"` is the original, and
+  // the only one that can carry a fraction, which is how an SVG layer squeezes
+  // between two existing steps. A `step-3` class is the one remark markdown can
+  // actually produce, since a content class becomes a class on the element:
+  //
+  //     .card.step-3[ ... ]
+  //
+  // The digit is required, so this cannot match `stepwise-svg` or `step-collapse`.
+  var CLASS_STEP = /(?:^|\s)step-(\d+)(?:\s|$)/;
+
+  function readStepIndex(element) {
+    if (!element || !element.getAttribute) {
+      return NaN;
+    }
+    var raw = element.getAttribute('data-step');
+    if (raw !== null) {
+      return parseFloat(raw);
+    }
+    var className = element.getAttribute('class');
+    var match = className && CLASS_STEP.exec(className);
+    return match ? parseFloat(match[1]) : NaN;
+  }
+
   function StepNode(element, step, hideRanges) {
     this.element = element;
     this.step = step;
     this.hideRanges = hideRanges || [];
     this.isSvgElement = element && element.namespaceURI === 'http://www.w3.org/2000/svg';
+
+    // How to hide. An Inkscape layer wants `display`, and so does anything that
+    // should close up the space it occupied. An HTML element in a grid or flex
+    // row wants `visibility`: with `display` the surviving rows redistribute and
+    // the layout jumps on every keypress, which is the whole reason a reveal
+    // looks wrong. Opt back into collapsing with the class `step-collapse`.
+    this.collapses = !!(this.isSvgElement ||
+      (element && element.classList && element.classList.contains('step-collapse')));
+
     this.originalDisplayStyle = element ? element.style.display : '';
+    this.originalVisibility = element ? element.style.visibility : '';
     this.originalSvgDisplay = this.isSvgElement ? element.getAttribute('display') : null;
   }
 
@@ -105,14 +138,22 @@
         this.element.setAttribute('display', this.originalSvgDisplay);
       }
     }
-    this.element.style.display = this.originalDisplayStyle || '';
+    if (this.collapses) {
+      this.element.style.display = this.originalDisplayStyle || '';
+    } else {
+      this.element.style.visibility = this.originalVisibility || '';
+    }
   };
 
   StepNode.prototype.hide = function () {
     if (this.isSvgElement) {
       this.element.setAttribute('display', 'none');
     }
-    this.element.style.display = 'none';
+    if (this.collapses) {
+      this.element.style.display = 'none';
+    } else {
+      this.element.style.visibility = 'hidden';
+    }
   };
 
   function StepController(root) {
@@ -128,11 +169,13 @@
       return;
     }
 
-    if (this.root.nodeType === 1 && this.root.hasAttribute && this.root.hasAttribute('data-step')) {
+    if (this.root.nodeType === 1 && isFinite(readStepIndex(this.root))) {
       this._addElement(this.root);
     }
 
-    var elements = this.root.querySelectorAll ? this.root.querySelectorAll('[data-step]') : [];
+    var elements = this.root.querySelectorAll
+      ? this.root.querySelectorAll('[data-step], [class*="step-"]')
+      : [];
     for (var i = 0; i < elements.length; i++) {
       this._addElement(elements[i]);
     }
@@ -149,12 +192,7 @@
       return;
     }
 
-    var rawStep = element.getAttribute('data-step');
-    if (rawStep === null) {
-      return;
-    }
-
-    var stepValue = parseFloat(rawStep);
+    var stepValue = readStepIndex(element);
     if (!isFinite(stepValue)) {
       return;
     }
@@ -487,7 +525,11 @@
   };
 
   function visibleSlideRoot() {
-    return document.querySelector('.remark-slide-container.remark-visible');
+    // Last, not first. In presenter mode remark copies the slide's outerHTML
+    // into .remark-preview-area, which sits after .remark-slides-area, so the
+    // live node is the final match. Same form as roulette.js and timer.js.
+    var nodes = document.querySelectorAll('.remark-slide-container.remark-visible');
+    return nodes[nodes.length - 1] || null;
   }
 
   function slideHasStepwiseClass(slideElement) {
@@ -508,7 +550,9 @@
 
     for (var i = 0; i < candidates.length; i++) {
       var candidate = candidates[i];
-      if (candidate && candidate.classList && candidate.classList.contains('stepwise-svg')) {
+      if (candidate && candidate.classList &&
+          (candidate.classList.contains('stepwise-svg') ||
+           candidate.classList.contains('stepwise'))) {
         return true;
       }
     }
@@ -600,6 +644,92 @@
         event.preventDefault();
         event.stopPropagation();
       }
+    }
+  }, true);
+  // ---- Printing -------------------------------------------------------------
+  // remark reveals every slide when the print stylesheet applies, but a slide
+  // the presenter never visited has never had afterShowSlide fired on it, and
+  // StepController._collect hides everything on construction. Such a slide
+  // therefore prints with its steps missing, or blank.
+  //
+  // Flatten instead: every stepwise slide prints in its final state, one page
+  // each. Done in JS rather than with a print stylesheet so that data-hide
+  // ranges are still honoured, a rule with !important would force a shade that
+  // retires at the last step back onto the page. Both `beforeprint` and the
+  // print media query fire under headless page.pdf(), so this works for the
+  // toolchain as well as for Ctrl+P.
+  var printSlideCache = new Map();
+
+  function flattenForPrint() {
+    var containers = document.querySelectorAll('.remark-slide-container');
+    for (var i = 0; i < containers.length; i++) {
+      var container = containers[i];
+      if (!slideHasStepwiseClass(container)) {
+        continue;
+      }
+      var stepSlide = printSlideCache.get(container);
+      if (!stepSlide) {
+        stepSlide = new StepSlide(container);
+        printSlideCache.set(container, stepSlide);
+      }
+      stepSlide.showAll();
+    }
+  }
+
+  window.addEventListener('beforeprint', flattenForPrint);
+
+  var printQuery = window.matchMedia ? window.matchMedia('print') : null;
+  if (printQuery) {
+    var onPrintQuery = function (event) {
+      if (event.matches) {
+        flattenForPrint();
+      }
+    };
+    if (printQuery.addEventListener) {
+      printQuery.addEventListener('change', onPrintQuery);
+    } else if (printQuery.addListener) {
+      printQuery.addListener(onPrintQuery);
+    }
+  }
+
+  // ---- Click ----------------------------------------------------------------
+  // remark advances on mousedown as well as click, so the step has to be taken
+  // at mousedown and the click that follows swallowed, or one gesture would
+  // both step and turn the page. Same contract as the keyboard handler: consume
+  // only what stepForward() actually used, and let the rest reach remark.
+  var swallowNextClick = false;
+
+  function isInteractiveTarget(target) {
+    if (!target || !target.closest) {
+      return false;
+    }
+    return !!target.closest('a, button, input, select, textarea, [contenteditable], ' +
+      '.nav-controls-bar, .nav-controls-hover-zone, .remark-notes-area');
+  }
+
+  document.addEventListener('mousedown', function (event) {
+    swallowNextClick = false;
+    if (!activeStepSlide || event.button !== 0) {
+      return;
+    }
+    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
+      return;
+    }
+    if (isInteractiveTarget(event.target)) {
+      return;
+    }
+    if (activeStepSlide.stepForward()) {
+      swallowNextClick = true;
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  }, true);
+
+  document.addEventListener('click', function (event) {
+    if (swallowNextClick) {
+      swallowNextClick = false;
+      event.preventDefault();
+      event.stopPropagation();
     }
   }, true);
 })();

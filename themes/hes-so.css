@@ -4,6 +4,10 @@
   --accent-dim: #dc006920;
   --accent-dark: #dc0069;
   --heading-color: #1a1a1a;
+  /* Rust rather than the default red: at HSL(19, 90%, 41%) it is 48 deg off
+     the accent instead of 29, and darker, so it reads as a second colour on
+     purpose rather than a bad match for the magenta. */
+  --warning: #c2410c;
 }
 
 .fa-solid-dim {
