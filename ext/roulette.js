@@ -429,7 +429,7 @@
         return;
       }
 
-      const countInput  = root.querySelector('#gr-count');
+      const countInput  = root.querySelector('#gr-num');
       const seedInput   = root.querySelector('#gr-seed');
       let k = this._parseIntPos(countInput && countInput.value) || 4;
       k = Math.max(1, k);
