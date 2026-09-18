@@ -1250,9 +1250,26 @@ a {
     font-size: 5.0em;
 }
 
-/* Hard-stop card: the one column on a slide that means "do not continue". */
+/* Hard-stop card: the one column on a slide that means "do not continue".
+   Switching the token has to reach everything accent-coloured inside the card,
+   not just the heading: `strong` and `em` are accent by default (see the rules
+   near the top), and magenta bold inside a rust card reads as two messages
+   instead of one. Same shape as the .muted rules above. */
 .cards .card.alert { border-top-color: var(--warning); }
-.cards .card.alert h3 { color: var(--warning); }
+.cards .card.alert h3,
+.cards .card.alert .metric,
+.cards .card.alert .enum,
+.cards .card.alert em,
+.cards .card.alert strong { color: var(--warning); }
+
+/* The icon is a tint of the card's colour, so on an alert card it is a tint of
+   the warning, at the same strengths the accent tints use. */
+.cards .card.alert .section-icon {
+    color: color-mix(in srgb, var(--warning) 38%, #fff);
+}
+.cards .card.alert .section-icon.corner {
+    color: color-mix(in srgb, var(--warning) 15%, #fff);
+}
 
 /* Shadows cost toner and add nothing on paper. */
 @media print {
