@@ -1,10 +1,14 @@
 // Now retrieve all IDs of asciinema casts
 const allcasts = new Map();
 
-slideshow.on('afterShowSlide', function (slide) {
+function mountCast(slide) {
 // Slide is the slide being navigated
 var slideNumber = slide.getSlideIndex();
-var element = document.getElementsByClassName("remark-visible")[0].getElementsByClassName('asciicast')
+var visible = document.getElementsByClassName("remark-visible")[0];
+if (!visible) {
+    return;
+}
+var element = visible.getElementsByClassName('asciicast')
 if (element.length == 0 ) {
     return;
 }
@@ -31,7 +35,18 @@ allcasts.set(slideNumber, AsciinemaPlayer.create(
     { autoPlay: auto, speed: speed, idleTimeLimit: idle, rows: rows, cols: cols }
 ));
 
-});
+}
+
+slideshow.on('afterShowSlide', mountCast);
+
+// remark shows the first slide (or the one in the URL hash) before this script
+// runs, so that slide never fires afterShowSlide here: mount it now, or a deck
+// reloaded on a cast slide shows an empty box until you leave and come back.
+var castInitialSlide = slideshow.getSlides()[slideshow.getCurrentSlideIndex()];
+if (castInitialSlide) {
+    mountCast(castInitialSlide);
+}
+
 slideshow.on('beforeHideSlide', function (slide) {
 // Slide is the slide being navigated
 var slideNumber = slide.getSlideIndex();
