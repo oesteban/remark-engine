@@ -92,6 +92,12 @@
   background: rgba(255, 255, 255, 0.12);
 }
 
+/* Emphasis in a title keeps the band's white instead of the accent. */
+.remark-slide-content:has(> .perma-sidebar) > h1 em,
+.remark-slide-content:has(> .perma-sidebar) > h1 strong {
+  color: inherit;
+}
+
 .remark-slide-content.vcenter > h1 {
   align-self: flex-start;
 }
