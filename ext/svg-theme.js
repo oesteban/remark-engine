@@ -26,6 +26,17 @@
   };
   var grid = gridMap[accent] || GRID_SWAPPED;
 
+  // A theme can set the channels itself instead of relying on the map above:
+  // --accent-a, --accent-a-light, --accent-b, --accent-b-light on :root. Each
+  // one that is set wins over the mapped value.
+  var channelVars = { a: '--accent-a', aL: '--accent-a-light', b: '--accent-b', bL: '--accent-b-light' };
+  var themed = {};
+  for (var key in channelVars) {
+    var v = rootStyle.getPropertyValue(channelVars[key]).trim();
+    themed[key] = v || grid[key];
+  }
+  grid = themed;
+
   // Class → [CSS property, value] mapping
   var rules = [
     ['accent-stroke', 'stroke', accent],
