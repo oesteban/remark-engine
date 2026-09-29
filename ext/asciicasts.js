@@ -16,8 +16,11 @@ if (allcasts.has(slideNumber)) {
 
 var castEl = element[0];
 var castid = castEl.attributes["id"].value;
-// Per-cast playback speed via `data-speed` on the .asciicast div; default 4.
+// Per-cast playback speed via `data-speed` on the .asciicast div; default 1.
 var speed = parseFloat(castEl.dataset.speed) || 1;
+// Longest pause kept, in seconds, via `data-idle`; default 8. Longer pauses in
+// the recording are compressed to this, before `speed` applies.
+var idle = parseFloat(castEl.dataset.idle) || 8;
 // `data-auto` defaults to true; only the explicit string "false" disables it.
 var auto = castEl.dataset.auto !== "false";
 var rows = parseInt(castEl.dataset.rows) || 20;
@@ -25,7 +28,7 @@ var cols = parseInt(castEl.dataset.cols) || 100;
 allcasts.set(slideNumber, AsciinemaPlayer.create(
     `images/${castid}.cast`,
     document.getElementById(castid),
-    { autoPlay: auto, speed: speed, idle_time_limit: 8, rows: rows, cols: cols }
+    { autoPlay: auto, speed: speed, idleTimeLimit: idle, rows: rows, cols: cols }
 ));
 
 });
