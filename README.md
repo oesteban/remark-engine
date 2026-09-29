@@ -33,11 +33,15 @@ themes/
   chuv.css        Green accent (#009933)
   hes-so.css      Magenta accent (#dc0069)
   nipreps.css     Blue accent (#1c487b)
+  ohbm2026.css    OHBM 2026 blue (#2e3192)
+  indos.css       INDoS COST Action: purple accent (#5D288F), navy headings
 ext/
   stepwise-svg.js Progressive SVG element reveal
   roulette.js     Timed speaking roulette + group formation
   roulette.css    Roulette UI styles
   asciicasts.js   Auto-discover & mount .cast terminal recordings
+                  (images/<id>.cast; data-speed, data-idle, data-rows,
+                  data-cols, data-auto on the .asciicast div)
   timer.js        Countdown timer for slides
 vendor/
   asciinema-player/  Vendored player CSS + JS
@@ -77,6 +81,7 @@ trailing `# comment`, which is stripped.
 | `--accent-dark` | Links | `var(--accent)` |
 | `--heading-color` | Headings | `#738373` |
 | `--logo-url` | Logo overlay | `none` |
+| `--accent-a`, `--accent-a-light`, `--accent-b`, `--accent-b-light` | Secondary SVG colour channels read by `ext/svg-theme.js` | per-accent map |
 
 ## License
 

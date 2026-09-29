@@ -1,0 +1,288 @@
+/* INDoS theme: COST Action CA24161, Improving Neuroimaging Data for Sharing.
+   Palette and type follow the INDoS brand guide (February 2026): the four logo
+   colours, navy for name and tagline, Montserrat SemiBold for the tagline.
+   The page motifs come from the same guide and the Action's website: a navy
+   title band with a diagonal right edge, an orange uppercase eyebrow, and a
+   mosaic of the four logo colours. */
+@import url(https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&display=swap);
+
+:root {
+  /* Brand palette */
+  --indos-orange: #F9B34B;
+  --indos-turquoise: #60BFAF;
+  --indos-lavender: #BE5EAC;
+  --indos-purple: #5D288F;
+  --indos-navy: #122B62;
+
+  /* Engine tokens. Literal hex rather than var(): svg-theme.js reads these
+     and injects them into <object> SVG documents. */
+  --accent: #5D288F;
+  --accent-dim: #5D288F20;
+  --accent-dark: #5D288F;
+  --heading-color: #122B62;
+  /* Amber, the orange of the logo darkened until it carries text. */
+  --warning: #b45309;
+  /* Turquoise darkened for text; far from both purple and amber. */
+  --question: #2a7f72;
+
+  /* Grid SVG channels for svg-theme.js: lavender and turquoise. */
+  --accent-a: #BE5EAC;
+  --accent-a-light: #dfa8d3;
+  --accent-b: #60BFAF;
+  --accent-b-light: #aedfd6;
+
+  /* The horizontal lockup is 2440 x 693. */
+  --logo-aspect: 2440 / 693;
+  --logo-width: clamp(90px, 13vw, 165px);
+  --logo-opacity: 0.85;
+}
+
+.fa-solid-dim {
+  color: #a37cc7;
+}
+
+/* --- Type ----------------------------------------------------------------- */
+.remark-slide-content h1,
+.remark-slide-content h2,
+.remark-slide-content h3,
+.eyebrow,
+.tag {
+  font-family: "Montserrat", "Urbanist", Helvetica, sans-serif;
+}
+
+.remark-slide-content h1 { font-size: 1.75em; font-weight: 700; letter-spacing: -0.01em; }
+.remark-slide-content h2 { font-weight: 600; }
+.remark-slide-content h3 { font-weight: 600; }
+
+/* --- Running rail: navy, with the logo mosaic as a thin edge stripe ------- */
+.perma-sidebar {
+  background-color: var(--indos-navy);
+  background-image: linear-gradient(to bottom,
+    var(--indos-turquoise) 0 25%,
+    var(--indos-orange) 25% 50%,
+    var(--indos-lavender) 50% 75%,
+    var(--indos-purple) 75% 100%);
+  background-size: 5px 100%;
+  background-position: right top;
+  background-repeat: no-repeat;
+}
+
+/* --- Title band ------------------------------------------------------------
+   The slide title sits in a navy band that runs from the rail and ends in a
+   diagonal, as on the brand guide's pages. It stays a block (fit-content, not
+   inline-block) so that floated columns after it never wrap beside it. */
+.remark-slide-content:has(> .perma-sidebar) > h1 {
+  width: fit-content;
+  max-width: calc(100% - 200px);
+  box-sizing: border-box;
+  margin: 0.5em 0 0.45em -32pt;
+  padding: 0.22em 1.5em 0.22em 32pt;
+  background: var(--indos-navy);
+  color: #fff;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 0.8em) 100%, 0 100%);
+  line-height: 1.25;
+}
+
+.remark-slide-content:has(> .perma-sidebar) > h1 .gray-text,
+.remark-slide-content:has(> .perma-sidebar) > h1 code {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.remark-slide-content:has(> .perma-sidebar) > h1 code {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.remark-slide-content.vcenter > h1 {
+  align-self: flex-start;
+}
+
+/* --- Small brand pieces --------------------------------------------------- */
+.eyebrow {
+  display: block;
+  color: var(--indos-orange);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-weight: 700;
+  font-size: 0.72em;
+}
+
+/* Four tiles in logo order, as on the Journal Club hero. Use raw HTML:
+   <div class="mosaic"></div> */
+.mosaic {
+  display: block;
+  width: 59px;
+  height: 11px;
+  background: linear-gradient(90deg,
+    var(--indos-turquoise) 0 11px, transparent 11px 16px,
+    var(--indos-orange) 16px 27px, transparent 27px 32px,
+    var(--indos-lavender) 32px 43px, transparent 43px 48px,
+    var(--indos-purple) 48px 59px);
+}
+
+.cta {
+  background: linear-gradient(180deg, #f7f3fc 0%, #f1eaf8 100%);
+  border-left: 4px solid var(--indos-purple);
+  border-radius: 0 8px 8px 0;
+  padding: 0.5em 1em;
+}
+
+.cta p { margin: 0.3em 0; }
+
+/* --- Schedule ------------------------------------------------------------- */
+.program-table td:nth-child(1) {
+  color: var(--indos-purple);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.tag {
+  display: inline-block;
+  min-width: 5.4em;
+  text-align: center;
+  font-size: 0.6em;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.18em 0.55em;
+  border-radius: 4px;
+  vertical-align: 0.22em;
+  margin-right: 0.6em;
+}
+
+.tag.theory   { color: #5D288F; background: #f1e9f8; }
+.tag.practice { color: #1f6f63; background: #e3f4f0; }
+.tag.plenary  { color: #122B62; background: #e6eaf3; }
+.tag.break    { color: #777;    background: #f0f0f0; }
+
+/* --- Cards: opt-in brand colours ------------------------------------------
+   .cards.brand cycles the top rule through the logo colours and navy, as the
+   website's person cards do. */
+.cards.brand > .card:nth-child(5n+1) { border-top-color: var(--indos-turquoise); }
+.cards.brand > .card:nth-child(5n+2) { border-top-color: var(--indos-orange); }
+.cards.brand > .card:nth-child(5n+3) { border-top-color: var(--indos-lavender); }
+.cards.brand > .card:nth-child(5n+4) { border-top-color: var(--indos-purple); }
+.cards.brand > .card:nth-child(5n+5) { border-top-color: var(--indos-navy); }
+
+/* .cards.compact: smaller type for five narrow columns of prose. */
+.cards.compact .card { font-size: 0.8em; }
+.cards.compact .card h3 { font-size: 1.15em; }
+
+/* --- Cover -----------------------------------------------------------------
+   `class: cover, indos-cover, no-logo`. A navy band on the left with the
+   white lockup, eyebrow, title and author; QR and funder logos on the right.
+
+     .cover-band[ ... ]
+     .cover-side[ ... ]
+     .cover-logos[ <img ...> <img ...> ]                                     */
+.remark-slide-content.indos-cover {
+  padding: 0;
+}
+
+.indos-cover .cover-band {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 60%;
+  box-sizing: border-box;
+  padding: 48px 12% 0 56px;
+  background: var(--indos-navy);
+  color: #fff;
+  clip-path: polygon(0 0, 100% 0, 84% 100%, 0 100%);
+}
+
+.indos-cover .cover-band img.lockup {
+  width: 250px;
+  display: block;
+  margin-bottom: 38px;
+}
+
+.indos-cover .cover-band h1 {
+  color: #fff;
+  font-size: 2.5em;
+  line-height: 1.1;
+  margin: 0.25em 0 0.35em 0;
+}
+
+.indos-cover .cover-band h2,
+.indos-cover .cover-band h3 {
+  color: #fff;
+  font-weight: 500;
+  margin: 0.2em 0;
+}
+
+.indos-cover .cover-band p {
+  margin: 0.4em 0;
+}
+
+.indos-cover .cover-band .who {
+  display: block;
+  margin-top: 1.6em;
+  font-size: 0.9em;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.indos-cover .cover-band .mosaic {
+  margin-top: 1.6em;
+}
+
+.indos-cover .cover-side {
+  position: absolute;
+  right: 48px;
+  top: 70px;
+  width: 30%;
+  text-align: center;
+  font-size: 0.72em;
+}
+
+.indos-cover .cover-side object,
+.indos-cover .cover-side img.qr {
+  width: 62%;
+}
+
+.indos-cover .cover-side a {
+  color: var(--indos-navy);
+  word-break: break-all;
+}
+
+.indos-cover .cover-logos {
+  position: absolute;
+  right: 48px;
+  bottom: 30px;
+  width: 34%;
+}
+
+.indos-cover .cover-logos p {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 22px;
+  margin: 0;
+}
+
+.indos-cover .cover-logos img {
+  height: 46px;
+}
+
+/* --- COST acknowledgement row for closing slides ---------------------------
+   .cost-ack[ <img ...> <img ...> This publication is based upon ... ]       */
+.cost-ack {
+  position: absolute;
+  left: calc(40px + 2em);
+  right: 6em;
+  bottom: 18px;
+  font-size: 0.6em;
+  color: #555;
+}
+
+.cost-ack p {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin: 0;
+}
+
+.cost-ack img {
+  height: 38px;
+  flex: 0 0 auto;
+}
