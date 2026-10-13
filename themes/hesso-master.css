@@ -1,0 +1,83 @@
+/* HES-SO Master theme: blue accent (MScBA, October 2026 onwards).
+   Palette from hes-so.ch: blue #00609c, slate #1c2e36, slate grey #556268.
+   Inter stands in for the site's Neue Haas Grotesk, which is not free. The
+   cover carries the two blue corner angles of HES-SO documents. */
+@import url(https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,600;0,800;1,400&display=swap);
+
+:root {
+  /* Literal hex rather than var(): svg-theme.js reads these. */
+  --accent: #00609c;
+  --accent-dim: #00609c20;
+  --accent-dark: #00609c;
+  --heading-color: #1c2e36;
+  /* The site's red. */
+  --warning: #da232f;
+  /* Violet: base's teal sits 28 deg from this blue, too close to tell apart. */
+  --question: #6d3fa6;
+
+  /* SVG channels for svg-theme.js: blue and the site's cyan. */
+  --accent-a: #00609c;
+  --accent-a-light: #8cb3cf;
+  --accent-b: #25bcca;
+  --accent-b-light: #a8e4ea;
+}
+
+body {
+  font-family: "Inter", "Arimo", Helvetica, sans-serif;
+}
+
+/* Inter is wider than Urbanist, with a taller x-height: one point less keeps
+   line lengths and reads the same size. */
+.remark-slide-content {
+  font-size: 15pt;
+}
+
+.fa-solid-dim {
+  color: #6fa0c4;
+}
+
+/* --- Cover: `class: cover` -------------------------------------------------
+   Two blue angles, opening from the top-left and bottom-right corners, frame
+   the title. The deck's --logo-url sits inside the first one. */
+.remark-slide-content.cover::before {
+  content: "";
+  position: absolute;
+  inset: 40px;
+  background:
+    linear-gradient(var(--accent), var(--accent)) left top / 120px 12px,
+    linear-gradient(var(--accent), var(--accent)) left top / 12px 80px,
+    linear-gradient(var(--accent), var(--accent)) right bottom / 120px 12px,
+    linear-gradient(var(--accent), var(--accent)) right bottom / 12px 80px;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+.remark-slide-content.cover::after {
+  top: 82px;
+  left: 82px;
+  right: auto;
+  width: 170px;
+  background-position: top left;
+  opacity: 1;
+}
+
+.remark-slide-content.cover .section-mark {
+  left: 82px;
+  right: 82px;
+  width: auto;
+  text-align: left;
+}
+
+.remark-slide-content.cover .section-mark h2 {
+  font-size: 2.4em;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.remark-slide-content.cover .section-mark h3 {
+  color: var(--accent);
+}
+
+.remark-slide-content.cover .section-mark p {
+  color: #556268;
+}

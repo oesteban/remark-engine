@@ -32,6 +32,7 @@ core/
 themes/
   chuv.css        Green accent (#009933)
   hes-so.css      Magenta accent (#dc0069)
+  hesso-master.css HES-SO Master: blue accent (#00609c), slate headings, Inter, cover angles
   nipreps.css     Blue accent (#1c487b)
   ohbm2026.css    OHBM 2026 blue (#2e3192)
   indos.css       INDoS COST Action: purple accent (#5D288F), navy headings
