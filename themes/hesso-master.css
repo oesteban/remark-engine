@@ -20,6 +20,12 @@
   --accent-a-light: #8cb3cf;
   --accent-b: #25bcca;
   --accent-b-light: #a8e4ea;
+
+  /* The logo, top right: the deck's --logo-url is the two-line HES-SO Master
+     mark ("Master" under the wordmark), drawn at a fixed width so it reads the
+     same on every screen. */
+  --logo-width: 128px;
+  --logo-aspect: 163.3 / 59.3;
 }
 
 body {
