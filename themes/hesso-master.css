@@ -1,7 +1,7 @@
 /* HES-SO Master theme: blue accent (MScBA, October 2026 onwards).
    Palette from hes-so.ch: blue #00609c, slate #1c2e36, slate grey #556268.
    Inter stands in for the site's Neue Haas Grotesk, which is not free. The
-   cover carries the two blue corner angles of HES-SO documents. */
+   cover carries the two blue corner angles of HES-SO Master slides. */
 @import url(https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,600;0,800;1,400&display=swap);
 
 :root {
@@ -20,6 +20,12 @@
   --accent-a-light: #8cb3cf;
   --accent-b: #25bcca;
   --accent-b-light: #a8e4ea;
+
+  /* The logo, top right: the deck's --logo-url is the two-line HES-SO Master
+     mark ("Master" under the wordmark), drawn at a fixed width so it reads the
+     same on every screen. */
+  --logo-width: 128px;
+  --logo-aspect: 163.3 / 59.3;
 }
 
 body {
@@ -37,17 +43,18 @@ body {
 }
 
 /* --- Cover: `class: cover` -------------------------------------------------
-   Two blue angles, opening from the top-left and bottom-right corners, frame
-   the title. The deck's --logo-url sits inside the first one. */
+   Two blue angles, in the top-right and bottom-left corners with arms of equal
+   length, frame the title, as on HES-SO Master slides. The deck's --logo-url
+   sits top-left. */
 .remark-slide-content.cover::before {
   content: "";
   position: absolute;
   inset: 40px;
   background:
-    linear-gradient(var(--accent), var(--accent)) left top / 120px 12px,
-    linear-gradient(var(--accent), var(--accent)) left top / 12px 80px,
-    linear-gradient(var(--accent), var(--accent)) right bottom / 120px 12px,
-    linear-gradient(var(--accent), var(--accent)) right bottom / 12px 80px;
+    linear-gradient(var(--accent), var(--accent)) right top / 80px 12px,
+    linear-gradient(var(--accent), var(--accent)) right top / 12px 80px,
+    linear-gradient(var(--accent), var(--accent)) left bottom / 80px 12px,
+    linear-gradient(var(--accent), var(--accent)) left bottom / 12px 80px;
   background-repeat: no-repeat;
   pointer-events: none;
 }
