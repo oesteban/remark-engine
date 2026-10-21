@@ -79,6 +79,21 @@
   padding: 4px 6px;
 }
 
+/* Print, in the bar and in remark's presenter toolbar. Busy while the SVGs load. */
+.nav-controls-bar .nav-btn-print {
+  font-size: 1rem;
+}
+
+.remark-toolbar .remark-toolbar-print svg {
+  vertical-align: -0.15em;
+}
+
+.nav-controls-bar .nav-btn-print[aria-busy="true"],
+.remark-toolbar .remark-toolbar-print[aria-busy="true"] {
+  cursor: progress;
+  opacity: 0.5;
+}
+
 /* Slide number input */
 .nav-slide-input {
   width: 3.2em;

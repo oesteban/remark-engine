@@ -54,6 +54,20 @@
   btnFs.setAttribute('title', 'Fullscreen (F)');
   btnFs.textContent = '⛶';
 
+  // An inline icon: no printer glyph renders alike across platforms.
+  var PRINTER_ICON =
+    '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" ' +
+    'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M6 9V2h12v7"/>' +
+    '<path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>' +
+    '<rect x="6" y="14" width="12" height="8"/></svg>';
+
+  var btnPrint = document.createElement('button');
+  btnPrint.className = 'nav-btn nav-btn-print';
+  btnPrint.setAttribute('aria-label', 'Print');
+  btnPrint.setAttribute('title', 'Print');
+  btnPrint.innerHTML = PRINTER_ICON;
+
   bar.appendChild(btnHome);
   bar.appendChild(btnPrev);
   bar.appendChild(slideInput);
@@ -61,6 +75,7 @@
   bar.appendChild(btnNext);
   bar.appendChild(btnEnd);
   bar.appendChild(btnFs);
+  bar.appendChild(btnPrint);
 
   document.body.appendChild(hoverZone);
   document.body.appendChild(bar);
@@ -168,6 +183,48 @@
   });
   document.addEventListener('fullscreenchange', syncFsIcon);
   document.addEventListener('webkitfullscreenchange', syncFsIcon);
+
+  // ---------- Print ----------
+  // The audience view prints the slides; presenter mode prints a handout with
+  // the notes (core/base.css). remarkEngine.print() loads every SVG first.
+  function printDeck(trigger) {
+    if (trigger.getAttribute('aria-busy') === 'true') return;
+    trigger.setAttribute('aria-busy', 'true');
+    function done() { trigger.removeAttribute('aria-busy'); }
+
+    var engine = window.remarkEngine;
+    if (engine && typeof engine.print === 'function') {
+      engine.print().then(done, done);
+    } else {
+      window.print();
+      done();
+    }
+  }
+
+  btnPrint.addEventListener('click', function (e) {
+    e.preventDefault();
+    btnPrint.blur();
+    printDeck(btnPrint);
+  });
+
+  // The same button in remark's presenter toolbar, after the notes' + and -.
+  // remark binds its toolbar links when it builds them, so this one is ours alone.
+  var toolbar = document.querySelector('.remark-notes-area .remark-toolbar');
+  if (toolbar) {
+    var linkPrint = document.createElement('a');
+    linkPrint.className = 'remark-toolbar-link remark-toolbar-print';
+    linkPrint.href = '#print';
+    linkPrint.setAttribute('aria-label', 'Print slides with notes');
+    linkPrint.setAttribute('title', 'Print slides with notes');
+    linkPrint.innerHTML = PRINTER_ICON;
+    toolbar.insertBefore(linkPrint, toolbar.querySelector('.remark-toolbar-timer'));
+
+    linkPrint.addEventListener('click', function (e) {
+      e.preventDefault();   // #print would send remark to the first slide
+      e.stopPropagation();
+      printDeck(linkPrint);
+    });
+  }
 
   // ---------- Slide number input ----------
   slideInput.addEventListener('keydown', function (e) {
