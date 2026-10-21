@@ -74,11 +74,42 @@
     // Another script owns `require`: the resize below restores the screen.
   }
 
-  // Whatever else a print disturbs, a resize has remark lay the screen out again.
-  function afterPrint() {
-    window.dispatchEvent(new Event('resize'));
+  // Whatever else a print disturbs, a resize has remark lay the screen out again,
+  // once the screen layout is back. Not at `afterprint`: Firefox fires it while
+  // the print layout is still in force, and remark would rescale every slide to
+  // the printed page.
+  if (window.matchMedia) {
+    window.matchMedia('print').addEventListener('change', function (event) {
+      if (!event.matches) {
+        window.dispatchEvent(new Event('resize'));
+      }
+    });
   }
-  window.addEventListener('afterprint', afterPrint);
+
+  // The page follows the mode: one slide per page at the slide's own size, or
+  // the handout on paper the reader picks, with margins. A named page in CSS
+  // (`page: handout`) cannot say this, because Firefox gives the first page the
+  // root's page instead: no margins, every page laid out at that page's width,
+  // and a blank page at the end. base.css reads the slide's size from the two
+  // custom properties.
+  var containerElement = document.querySelector('.remark-slides-area').parentNode;
+  var pageRule = document.createElement('style');
+  document.head.appendChild(pageRule);
+
+  function syncPrintPage() {
+    var scaler = containerElement.querySelector('.remark-slide-scaler');
+    var width = (scaler && scaler.style.width) || '1210px';
+    var height = (scaler && scaler.style.height) || '681px';
+    document.documentElement.style.setProperty('--remark-slide-width', width);
+    document.documentElement.style.setProperty('--remark-slide-height', height);
+    pageRule.textContent = containerElement.classList.contains('remark-presenter-mode')
+      ? '@page { size: auto; margin: 12mm; }'
+      : '@page { size: ' + width + ' ' + height + '; margin: 0; }';
+  }
+
+  syncPrintPage();
+  new MutationObserver(syncPrintPage).observe(containerElement,
+    { attributes: true, attributeFilter: ['class'] });
 
   // An <object> SVG sized by its width alone takes its height from the drawing,
   // once the drawing has loaded. Firefox prints from a copy of the page that has
