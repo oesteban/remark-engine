@@ -659,30 +659,66 @@
   // print media query fire under headless page.pdf(), so this works for the
   // toolchain as well as for Ctrl+P.
   var printSlideCache = new Map();
+  var printedSteps = null;   // [stepSlide, step] pairs, put back after the print
+
+  // The StepSlide already driving a slide that has been shown. A new one would
+  // take the steps that slide is hiding for their original state, and print
+  // them hidden: the slide on screen printed at its current step, not its last.
+  function liveStepSlide(container) {
+    var live = null;
+    stepSlideCache.forEach(function (stepSlide) {
+      if (stepSlide && stepSlide.container === container) {
+        live = stepSlide;
+      }
+    });
+    return live;
+  }
 
   function flattenForPrint() {
+    if (printedSteps) {
+      return;   // beforeprint and the print media query both fire
+    }
+    printedSteps = [];
     var containers = document.querySelectorAll('.remark-slide-container');
     for (var i = 0; i < containers.length; i++) {
       var container = containers[i];
       if (!slideHasStepwiseClass(container)) {
         continue;
       }
-      var stepSlide = printSlideCache.get(container);
+      var stepSlide = liveStepSlide(container) || printSlideCache.get(container);
       if (!stepSlide) {
         stepSlide = new StepSlide(container);
         printSlideCache.set(container, stepSlide);
       }
+      printedSteps.push([stepSlide, stepSlide.currentStepValue]);
       stepSlide.showAll();
     }
   }
 
+  // Flattening reaches the slides on screen too. Put each back at its step.
+  function restoreAfterPrint() {
+    if (!printedSteps) {
+      return;
+    }
+    printedSteps.forEach(function (pair) {
+      if (pair[0].hasSteps()) {
+        pair[0].currentStepValue = pair[1];
+        pair[0]._applyCurrentStep();
+      }
+    });
+    printedSteps = null;
+  }
+
   window.addEventListener('beforeprint', flattenForPrint);
+  window.addEventListener('afterprint', restoreAfterPrint);
 
   var printQuery = window.matchMedia ? window.matchMedia('print') : null;
   if (printQuery) {
     var onPrintQuery = function (event) {
       if (event.matches) {
         flattenForPrint();
+      } else {
+        restoreAfterPrint();
       }
     };
     if (printQuery.addEventListener) {
