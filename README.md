@@ -81,9 +81,11 @@ blank. The buttons load every SVG before they open the print dialog. A deck that
 also loads `ext/svg-preload.js` loads them at startup, so Ctrl+P prints them too.
 
 `tools/check-print.sh <deck-dir>`, run from the directory that serves the deck,
-prints it both ways in headless Chrome. It checks that the screen is unchanged
-afterwards, that the page counts are right, and that the buttons wait for the
-SVGs. It leaves the PDFs and their pages, as PNG, in `_preview/print/`.
+prints it both ways in headless Chrome, and in Firefox when it is installed. It
+checks that the screen is unchanged afterwards, the page counts, the width each
+print is laid out at, that no page is blank and the handout keeps its margins,
+and that the buttons wait for the SVGs. It leaves the PDFs and their pages, as
+PNG, in `_preview/print/`.
 
 ## Roster (`ext/roulette.js`)
 

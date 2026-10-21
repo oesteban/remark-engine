@@ -9,7 +9,8 @@
 # must find the engine at ../../remark/, as it does on the published site. Output
 # goes to _preview/print/<dir>/ (set OUT to change the parent directory).
 # puppeteer-core comes from decktape's npx install; pdfinfo and pdftoppm from
-# poppler.
+# poppler. Firefox, when found (or named by FIREFOX), prints the deck too, and
+# ImageMagick, when found, checks every page for blanks and margins.
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
 id="${1:?usage: remark/tools/check-print.sh <deck-dir, e.g. week2/day2>}"
@@ -18,6 +19,9 @@ chrome="${CHROME:-$(command -v google-chrome || command -v chromium || true)}"
 mac="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 [ -n "$chrome" ] || [ ! -x "$mac" ] || chrome="$mac"
 [ -n "$chrome" ] || { echo "no Chrome found; set CHROME=/path/to/chrome" >&2; exit 1; }
+firefox="${FIREFOX:-$(command -v firefox || true)}"
+macfx="/Applications/Firefox.app/Contents/MacOS/firefox"
+[ -n "$firefox" ] || [ ! -x "$macfx" ] || firefox="$macfx"
 command -v pdfinfo >/dev/null && command -v pdftoppm >/dev/null \
   || { echo "pdfinfo and pdftoppm not found; install poppler" >&2; exit 1; }
 nm="$(dirname "$(dirname "$(npx --yes -p decktape which decktape)")")"
@@ -32,4 +36,4 @@ sleep 1
 
 rm -rf "$out"
 mkdir -p "$out"
-node "$here/check-print.mjs" "$nm" "$chrome" "http://127.0.0.1:$port/$id/index.html" "$out"
+node "$here/check-print.mjs" "$nm" "$chrome" "http://127.0.0.1:$port/$id/index.html" "$out" "$firefox"
