@@ -43,18 +43,20 @@ body {
 }
 
 /* --- Cover: `class: cover` -------------------------------------------------
-   Two blue angles, in the top-right and bottom-left corners with arms of equal
-   length, frame the title, as on HES-SO Master slides. The deck's --logo-url
-   sits top-left. */
+   Two blue angles, in the top-right and bottom-left corners, frame the title,
+   as on HES-SO Master documents: each is a right triangle whose inner corner is
+   cut away, so both arms end in a 45-degree cut along its long side. The arms
+   are a quarter as thick as they are long. The SVGs repeat --accent as a
+   literal (%2300609c): a CSS variable does not reach into a data URI, and a
+   mask that would take it bleeds a hairline along the frame in print. The
+   deck's --logo-url sits top-left. */
 .remark-slide-content.cover::before {
   content: "";
   position: absolute;
   inset: 40px;
   background:
-    linear-gradient(var(--accent), var(--accent)) right top / 80px 12px,
-    linear-gradient(var(--accent), var(--accent)) right top / 12px 80px,
-    linear-gradient(var(--accent), var(--accent)) left bottom / 80px 12px,
-    linear-gradient(var(--accent), var(--accent)) left bottom / 12px 80px;
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 4'%3E%3Cpath fill='%2300609c' d='M0 0H4V4L3 3V1H1Z'/%3E%3C/svg%3E") right top / 48px 48px,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 4'%3E%3Cpath fill='%2300609c' d='M0 0L1 1V3H3L4 4H0Z'/%3E%3C/svg%3E") left bottom / 48px 48px;
   background-repeat: no-repeat;
   pointer-events: none;
 }
