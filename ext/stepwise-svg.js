@@ -575,15 +575,29 @@
     if (stepSlideCache.has(index)) {
       var cached = stepSlideCache.get(index);
       if (cached && cached.container !== container) {
-        cached = new StepSlide(container);
+        cached = adoptOrCreate(container);
         stepSlideCache.set(index, cached);
       }
       return cached;
     }
 
-    var stepSlide = new StepSlide(container);
+    var stepSlide = adoptOrCreate(container);
     stepSlideCache.set(index, stepSlide);
     return stepSlide;
+  }
+
+  // One StepSlide per slide. A print made before the slide was first shown has
+  // already built one, and restored it to no step, hiding its steps; a second
+  // StepSlide over the same slide would take that hidden state for the slide's
+  // own and never show it again. Tools that print one slide at a time (decktape)
+  // print every later stepwise slide blank that way.
+  function adoptOrCreate(container) {
+    var printed = printSlideCache.get(container);
+    if (printed) {
+      printSlideCache.delete(container);
+      return printed;
+    }
+    return new StepSlide(container);
   }
 
   slideshow.on('beforeHideSlide', function () {
